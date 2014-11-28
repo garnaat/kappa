@@ -1,0 +1,89 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+        "ExecRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [ "lambda.amazonaws.com" ]
+                        },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                }
+            }
+        },
+        "ExecRolePolicies": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "ExecRolePolicy",
+                "PolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Action": [
+                            "logs:*"
+                        ],
+                        "Resource": "arn:aws:logs:*:*:*"
+                    } ]
+                },
+                "Roles": [ { "Ref": "ExecRole" } ]
+            }
+        },
+        "InvokeRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [ "s3.amazonaws.com" ]
+                        },
+                        "Action": [ "sts:AssumeRole" ],
+                        "Condition": {
+                            "ArnLike": {
+                                "sts:ExternalId": "arn:aws:s3:::*"
+                            }
+                        }
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": "lambda.amazonaws.com"
+                        },
+                        "Action": "sts:AssumeRole"
+                    } ]
+                }
+            }
+        },
+        "InvokeRolePolicies": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "ExecRolePolicy",
+                "PolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect":"Allow",
+                            "Action":[
+                                "lambda:InvokeFunction",
+                                "kinesis:GetRecords",
+                                "kinesis:GetShardIterator",
+                                "kinesis:DescribeStream",
+                                "kinesis:ListStreams"
+                            ],
+                            "Resource":[
+                                "*"
+                            ]
+                        }
+                    ]
+                },
+                "Roles": [ { "Ref": "InvokeRole" } ]
+            }
+        }
+    }
+}  

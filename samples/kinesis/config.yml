@@ -1,0 +1,21 @@
+---
+profile: personal
+region: us-east-1
+cloudformation:
+  template: roles.cf
+  stack_name: TestKinesis
+  exec_role: ExecRole
+  invoke_role: InvokeRole
+lambda:
+  name: KinesisSample
+  zipfile_name: KinesisSample.zip
+  description: Testing Kinesis Lambda handler
+  path: ProcessKinesisRecords.js
+  handler: ProcessKinesisRecords.handler
+  runtime: nodejs
+  memory_size: 128
+  timeout: 3
+  mode: event
+  event_source: arn:aws:kinesis:us-east-1:084307701560:stream/lambdastream
+  test_data: input.json
+  
