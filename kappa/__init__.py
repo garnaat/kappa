@@ -14,6 +14,7 @@
 import logging
 import os
 import zipfile
+import time
 
 import botocore.session
 from botocore.exceptions import ClientError
@@ -22,6 +23,8 @@ LOG = logging.getLogger(__name__)
 
 
 class Kappa(object):
+
+    completed_states = ('CREATE_COMPLETE', 'UPDATE_COMPLETE')
 
     def __init__(self, config):
         self.config = config
@@ -52,6 +55,14 @@ class Kappa(object):
             response = cfn.create_stack(
                 StackName=stack_name, TemplateBody=template_body,
                 Capabilities=['CAPABILITY_IAM'])
+        done = False
+        while not done:
+            response = cfn.describe_stacks(StackName=stack_name)
+            status = response['Stacks'][0]['StackStatus']
+            LOG.debug('Stack status is: %s', status)
+            if status in self.completed_states:
+                done = True
+            time.sleep(1)
 
     def get_role_arn(self, role_name):
         role_arn = None
@@ -156,6 +167,20 @@ class Kappa(object):
             logStreamName=latest_stream['logStreamName'])
         for log_event in response['events']:
             print('%s: %s' % (log_event['timestamp'], log_event['message']))
+
+    def add_event_source(self):
+        lambda_svc = self.session.create_client('lambda', self.region)
+        try:
+            invoke_role = self.get_role_arn(
+                self.config['cloudformation']['invoke_role'])
+            response = lambda_svc.add_event_source(
+                FunctionName=self.config['lambda']['name'],
+                Role=invoke_role,
+                EventSource=self.config['lambda']['event_source'],
+                BatchSize=self.config['lambda'].get('batch_size', 100))
+            LOG.debug(response)
+        except Exception:
+            LOG.exception('Unable to add event source')
 
     def deploy(self):
         self.create_update_roles(

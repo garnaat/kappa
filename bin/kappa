@@ -64,7 +64,7 @@ def set_debug_logger(logger_names=['kappa'], stream=None):
 @click.argument(
     'command',
     required=True,
-    type=click.Choice(['deploy', 'test', 'tail', 'delete'])
+    type=click.Choice(['deploy', 'test', 'tail', 'add-event-source', 'delete'])
 )
 def main(config=None, debug=False, dryrun=False, command=None):
     if debug:
@@ -79,6 +79,8 @@ def main(config=None, debug=False, dryrun=False, command=None):
         kappa.tail()
     elif command == 'delete':
         kappa.delete()
+    elif command == 'add-event-source':
+        kappa.add_event_source()
 
 
 if __name__ == '__main__':
