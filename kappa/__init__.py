@@ -57,12 +57,12 @@ class Kappa(object):
                 Capabilities=['CAPABILITY_IAM'])
         done = False
         while not done:
+            time.sleep(1)
             response = cfn.describe_stacks(StackName=stack_name)
             status = response['Stacks'][0]['StackStatus']
             LOG.debug('Stack status is: %s', status)
             if status in self.completed_states:
                 done = True
-            time.sleep(1)
 
     def get_role_arn(self, role_name):
         role_arn = None

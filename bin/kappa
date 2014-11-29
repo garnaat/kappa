@@ -56,31 +56,33 @@ def set_debug_logger(logger_names=['kappa'], stream=None):
     default=False,
     help='Turn on debugging output'
 )
-@click.option(
-    '--dryrun/--no-dryrun',
-    default=False,
-    help='Do not send the email'
-)
 @click.argument(
     'command',
     required=True,
     type=click.Choice(['deploy', 'test', 'tail', 'add-event-source', 'delete'])
 )
-def main(config=None, debug=False, dryrun=False, command=None):
+def main(config=None, debug=False, command=None):
     if debug:
         set_debug_logger()
     config = yaml.load(config)
     kappa = Kappa(config)
     if command == 'deploy':
+        click.echo('Deploying ...')
         kappa.deploy()
     elif command == 'test':
+        click.echo('Sending test data ...')
         kappa.test()
+        click.echo('...done')
     elif command == 'tail':
         kappa.tail()
     elif command == 'delete':
+        click.echo('Deleting ...')
         kappa.delete()
+        click.echo('...done')
     elif command == 'add-event-source':
+        click.echo('Adding event source ...')
         kappa.add_event_source()
+        click.echo('...done')
 
 
 if __name__ == '__main__':

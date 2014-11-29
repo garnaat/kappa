@@ -33,7 +33,7 @@ Where ``command`` is one of:
 
 * deploy - deploy the CloudFormation template containing the IAM roles and zip the function and upload it to AWS Lambda
 * test - send test data to the new Lambda function
-* tail - display the most recent log events for the function
+* tail - display the most recent log events for the function (remember that it can take several minutes before log events are available from CloudWatch)
 * add-event-source - hook up an event source to your Lambda function
 * delete - delete the CloudFormation stack containing the IAM roles and delete the Lambda function
 
