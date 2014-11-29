@@ -40,5 +40,5 @@ The ``config file`` is a YAML format file containing all of the information
 about your Lambda function.
 
 An example project based on a Kinesis stream can be found in
-``samples/kinesis``.
+[samples/kinesis](https://github.com/garnaat/kappa/tree/develop/samples/kinesis).
 
