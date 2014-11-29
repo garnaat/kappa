@@ -11,7 +11,7 @@ You have to:
 * Create the IAM roles required by the Lambda function itself (the executing
 role) as well as the policy required by whoever is invoking the Lambda
 function (the invocation role)
-* Compress the function and any dependencies and upload it to AWS Lambda
+* Zip the function and any dependencies and upload it to AWS Lambda
 * Test the function with mock data
 * Retrieve the output of the function from CloudWatch Logs
 * Add an event source to the function
@@ -25,11 +25,11 @@ to the uploaded function and finds the related CloudWatch log stream and
 displays the log events.  Finally, it will add the event source to turn
 your function on.
 
-Kappa is a command line tool.  The basic command is:
+Kappa is a command line tool.  The basic command format is:
 
     kappa --config <path to config file> <command>
 
-Where commands is one of:
+Where ``command`` is one of:
 
 * deploy - deploy the CloudFormation template containing the IAM roles and zip the function and upload it to AWS Lambda
 * test - send test data to the new Lambda function
@@ -43,7 +43,7 @@ about your Lambda function.
 An example project based on a Kinesis stream can be found in
 [samples/kinesis](https://github.com/garnaat/kappa/tree/develop/samples/kinesis).
 
-The basic workflow would be to:
+The basic workflow is:
 
 * Create your Lambda function
 * Create your CloudFormation template with the execution and invocation roles
