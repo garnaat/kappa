@@ -154,9 +154,11 @@ class Kappa(object):
     def _tail(self, function_name):
         LOG.debug('tailing function: %s', function_name)
         log_svc = self.session.create_client('logs', self.region)
+        # kinda kludgy but can't find any way to get log group name
         log_group_name = '/aws/lambda/%s' % function_name
         latest_stream = None
         response = log_svc.describe_log_streams(logGroupName=log_group_name)
+        # The streams are not ordered by time, hence this ugliness
         for stream in response['logStreams']:
             if not latest_stream:
                 latest_stream = stream
@@ -166,7 +168,7 @@ class Kappa(object):
             logGroupName=log_group_name,
             logStreamName=latest_stream['logStreamName'])
         for log_event in response['events']:
-            print('%s: %s' % (log_event['timestamp'], log_event['message']))
+            print(log_event['message'])
 
     def add_event_source(self):
         lambda_svc = self.session.create_client('lambda', self.region)
