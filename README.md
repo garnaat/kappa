@@ -34,6 +34,7 @@ Where commands is one of:
 * deploy - deploy the CloudFormation template containing the IAM roles and zip the function and upload it to AWS Lambda
 * test - send test data to the new Lambda function
 * tail - display the most recent log events for the function
+* add-event-source - hook up an event source to your Lambda function
 * delete - delete the CloudFormation stack containing the IAM roles and delete the Lambda function
 
 The ``config file`` is a YAML format file containing all of the information
@@ -41,4 +42,16 @@ about your Lambda function.
 
 An example project based on a Kinesis stream can be found in
 [samples/kinesis](https://github.com/garnaat/kappa/tree/develop/samples/kinesis).
+
+The basic workflow would be to:
+
+* Create your Lambda function
+* Create your CloudFormation template with the execution and invocation roles
+* Create some sample data
+* Create the YAML config file with all of the information
+* Run ``kappa --config <path-to-config> deploy`` to create roles and upload function
+* Run ``kappa --config <path-to-config> test`` to invoke the function with test data
+* Run ``kappa --config <path-to-config> tail`` to view the functions output in CloudWatch logs
+* Run ``kappa --config <path-to-config> add-event-source`` to hook your function up to the event source
+* Run ``kappa --config <path-to-config> tail`` to see more output
 
