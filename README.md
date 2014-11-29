@@ -55,3 +55,5 @@ The basic workflow is:
 * Run ``kappa --config <path-to-config> add-event-source`` to hook your function up to the event source
 * Run ``kappa --config <path-to-config> tail`` to see more output
 
+If you have to make changes in your function or in your IAM roles, simply run
+``kappa deploy`` again and the changes will be uploaded as necessary.
