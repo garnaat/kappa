@@ -170,7 +170,20 @@ class Kappa(object):
         for log_event in response['events']:
             print(log_event['message'])
 
-    def add_event_source(self):
+    def _get_function_arn(self):
+        name = self.config['lambda']['name']
+        arn = None
+        lambda_svc = self.session.create_client('lambda', self.region)
+        try:
+            response = lambda_svc.get_function_configuration(
+                FunctionName=name)
+            LOG.debug(response)
+            arn = response['FunctionARN']
+        except Exception:
+            LOG.debug('Unable to find ARN for function: %s' % name)
+        return arn
+
+    def _add_kinesis_event_source(self, event_source_arn):
         lambda_svc = self.session.create_client('lambda', self.region)
         try:
             invoke_role = self.get_role_arn(
@@ -178,11 +191,37 @@ class Kappa(object):
             response = lambda_svc.add_event_source(
                 FunctionName=self.config['lambda']['name'],
                 Role=invoke_role,
-                EventSource=self.config['lambda']['event_source'],
+                EventSource=event_source_arn,
                 BatchSize=self.config['lambda'].get('batch_size', 100))
             LOG.debug(response)
         except Exception:
             LOG.exception('Unable to add event source')
+
+    def _add_s3_event_source(self, event_source_arn):
+        s3_svc = self.session.create_client('s3', self.region)
+        bucket_name = event_source_arn.split(':')[-1]
+        invoke_role = self.get_role_arn(
+            self.config['cloudformation']['invoke_role'])
+        notification_spec = {
+            'CloudFunctionConfiguration': {
+                'Id': 'Kappa-%s-notification' % self.config['lambda']['name'],
+                'Events': [e for e in self.config['lambda']['s3_events']],
+                'CloudFunction': self._get_function_arn(),
+                'InvocationRole': invoke_role}}
+        response = s3_svc.put_bucket_notification(
+            Bucket=bucket_name,
+            NotificationConfiguration=notification_spec)
+        LOG.debug(response)
+
+    def add_event_source(self):
+        event_source_arn = self.config['lambda']['event_source']
+        _, _, svc, _ = event_source_arn.split(':', 3)
+        if svc == 'kinesis':
+            self._add_kinesis_event_source(event_source_arn)
+        elif svc == 's3':
+            self._add_s3_event_source(event_source_arn)
+        else:
+            raise ValueError('Unsupported event source: %s' % event_source_arn)
 
     def deploy(self):
         self.create_update_roles(
