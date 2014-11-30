@@ -91,7 +91,7 @@ class Kappa(object):
     def _zip_lambda_dir(self, zipfile_name, lambda_dir):
         LOG.debug('_zip_lambda_dir: lambda_dir=%s', lambda_dir)
         LOG.debug('zipfile_name=%s', zipfile_name)
-        relroot = os.path.abspath(os.path.join(lambda_dir, os.pardir))
+        relroot = os.path.abspath(lambda_dir)
         with zipfile.ZipFile(zipfile_name, 'w') as zf:
             for root, dirs, files in os.walk(lambda_dir):
                 zf.write(root, os.path.relpath(root, relroot))

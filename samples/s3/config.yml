@@ -10,13 +10,13 @@ lambda:
   name: S3Sample
   zipfile_name: S3Sample.zip
   description: Testing S3 Lambda handler
-  path: examplefolder
+  path: examplefolder/
   handler: CreateThumbnail.handler
   runtime: nodejs
   memory_size: 128
   timeout: 3
   mode: event
   test_data: input.json
-  event_source: arn:aws:s3:::garnaat_pub
+  event_source: arn:aws:s3:::sourcebucket
   s3_events:
     - s3:ObjectCreated:*

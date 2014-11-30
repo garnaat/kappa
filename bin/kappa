@@ -69,6 +69,7 @@ def main(config=None, debug=False, command=None):
     if command == 'deploy':
         click.echo('Deploying ...')
         kappa.deploy()
+        click.echo('...done')
     elif command == 'test':
         click.echo('Sending test data ...')
         kappa.test()
