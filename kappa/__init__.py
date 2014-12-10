@@ -238,6 +238,7 @@ class Kappa(object):
             self.config['lambda']['zipfile_name'],
             self.config['lambda']['path'])
         self.upload_lambda_function(self.config['lambda']['zipfile_name'])
+        self.add_event_source()
 
     def test(self):
         self._invoke_asynch(self.config['lambda']['test_data'])
