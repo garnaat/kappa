@@ -29,7 +29,11 @@ class Kappa(object):
     def __init__(self, config):
         self.config = config
         self.session = botocore.session.get_session()
-        self.session.profile = config['profile']
+        # otherwise, assume we'll use environment variables
+        if 'profile' in config:
+            self.session.profile = config['profile']
+        else:
+            self.session.profile = None
         self.region = config['region']
 
     def create_update_roles(self, stack_name, roles_path):
