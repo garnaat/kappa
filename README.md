@@ -40,6 +40,9 @@ Where ``command`` is one of:
 The ``config file`` is a YAML format file containing all of the information
 about your Lambda function.
 
+If you use environment variables for your AWS credentials (as normally supported by boto),
+simply exclude the ``profile`` element from the YAML file.
+
 An example project based on a Kinesis stream can be found in
 [samples/kinesis](https://github.com/garnaat/kappa/tree/develop/samples/kinesis).
 

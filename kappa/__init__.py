@@ -25,11 +25,16 @@ LOG = logging.getLogger(__name__)
 class Kappa(object):
 
     completed_states = ('CREATE_COMPLETE', 'UPDATE_COMPLETE')
+    failed_states = ('ROLLBACK_COMPLETE')
 
     def __init__(self, config):
         self.config = config
         self.session = botocore.session.get_session()
-        self.session.profile = config['profile']
+        # otherwise, assume we'll use environment variables
+        if 'profile' in config:
+            self.session.profile = config['profile']
+        else:
+            self.session.profile = None
         self.region = config['region']
 
     def create_update_roles(self, stack_name, roles_path):
@@ -63,6 +68,8 @@ class Kappa(object):
             LOG.debug('Stack status is: %s', status)
             if status in self.completed_states:
                 done = True
+            if status in self.failed_states:
+                raise ValueError('Could not create stack %s: %s' % (stack_name, status))
 
     def get_role_arn(self, role_name):
         role_arn = None
@@ -231,6 +238,7 @@ class Kappa(object):
             self.config['lambda']['zipfile_name'],
             self.config['lambda']['path'])
         self.upload_lambda_function(self.config['lambda']['zipfile_name'])
+        self.add_event_source()
 
     def test(self):
         self._invoke_asynch(self.config['lambda']['test_data'])
