@@ -17,6 +17,8 @@ lambda:
   timeout: 3
   mode: event
   test_data: input.json
-  event_source: arn:aws:s3:::sourcebucket
-  s3_events:
-    - s3:ObjectCreated:*
+  event_sources:
+    -
+      arn: arn:aws:s3:::test-1245812163
+      events:
+        - s3:ObjectCreated:*
