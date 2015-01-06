@@ -22,6 +22,7 @@ LOG = logging.getLogger(__name__)
 class Stack(object):
 
     completed_states = ('CREATE_COMPLETE', 'UPDATE_COMPLETE')
+    failed_states = ('ROLLBACK_COMPLETE')
 
     def __init__(self, context, config):
         self._context = context
@@ -91,6 +92,9 @@ class Stack(object):
             LOG.debug('Stack status is: %s', status)
             if status in self.completed_states:
                 done = True
+            if status in self.failed_states:
+                msg = 'Could not create stack %s: %s' % (self.name, status)
+                raise ValueError(msg)
 
     def create(self):
         LOG.debug('create_stack: stack_name=%s', self.name)
