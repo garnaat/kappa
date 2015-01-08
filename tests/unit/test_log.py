@@ -16,7 +16,7 @@ import unittest
 import mock
 
 from kappa.log import Log
-from mock_aws import get_aws
+from tests.unit.mock_aws import get_aws
 
 
 class TestLog(unittest.TestCase):

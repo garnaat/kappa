@@ -118,7 +118,7 @@ class Stack(object):
                 StackName=self.name, TemplateBody=template_body,
                 Capabilities=['CAPABILITY_IAM'])
             LOG.debug(response)
-        except Exception, e:
+        except Exception as e:
             if 'ValidationError' in str(e):
                 LOG.info('No Updates Required')
             else:

@@ -17,7 +17,7 @@ import os
 import mock
 
 from kappa.stack import Stack
-from mock_aws import get_aws
+from tests.unit.mock_aws import get_aws
 
 Config = {
     'template': 'roles.cf',
