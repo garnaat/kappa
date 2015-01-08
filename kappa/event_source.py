@@ -54,7 +54,7 @@ class KinesisEventSource(EventSource):
         try:
             response = self._lambda.add_event_source(
                 FunctionName=function.name,
-                Role=self.invoke_role_arn,
+                Role=self._context.invoke_role_arn,
                 EventSource=self.arn,
                 BatchSize=self.batch_size)
             LOG.debug(response)
@@ -88,9 +88,9 @@ class S3EventSource(EventSource):
         notification_spec = {
             'CloudFunctionConfiguration': {
                 'Id': self._make_notification_id(function.name),
-                'Events': [e for e in self.config['events']],
+                'Events': [e for e in self._config['events']],
                 'CloudFunction': function.arn(),
-                'InvocationRole': self.invoke_role_arn}}
+                'InvocationRole': self._context.invoke_role_arn}}
         try:
             response = self._s3.put_bucket_notification(
                 Bucket=self._get_bucket_name(),
