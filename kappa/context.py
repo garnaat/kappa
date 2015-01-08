@@ -92,15 +92,16 @@ class Context(object):
     def _create_event_sources(self):
         for event_source_cfg in self.config['lambda']['event_sources']:
             _, _, svc, _ = event_source_cfg['arn'].split(':', 3)
-        if svc == 'kinesis':
-            self.event_sources.append(kappa.event_source.KinesisEventSource(
-                self, event_source_cfg))
-        elif svc == 's3':
-            self.event_sources.append(kappa.event_source.S3EventSource(
-                self, event_source_cfg))
-        else:
-            msg = 'Unsupported event source: %s' % event_source_cfg['arn']
-            raise ValueError(msg)
+            if svc == 'kinesis':
+                self.event_sources.append(
+                    kappa.event_source.KinesisEventSource(
+                        self, event_source_cfg))
+            elif svc == 's3':
+                self.event_sources.append(kappa.event_source.S3EventSource(
+                    self, event_source_cfg))
+            else:
+                msg = 'Unsupported event source: %s' % event_source_cfg['arn']
+                raise ValueError(msg)
 
     def add_event_sources(self):
         for event_source in self.event_sources:

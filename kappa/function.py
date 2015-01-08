@@ -80,7 +80,7 @@ class Function(object):
                 LOG.debug(response)
                 self._arn = response['FunctionARN']
             except Exception:
-                LOG.debug('Unable to find ARN for function: %s' % self.name)
+                LOG.debug('Unable to find ARN for function: %s', self.name)
         return self._arn
 
     @property
@@ -101,12 +101,12 @@ class Function(object):
         with zipfile.ZipFile(zipfile_name, 'w') as zf:
             for root, dirs, files in os.walk(lambda_dir):
                 zf.write(root, os.path.relpath(root, relroot))
-                for file in files:
-                    filename = os.path.join(root, file)
-                    if os.path.isfile(filename):
+                for filename in files:
+                    filepath = os.path.join(root, filename)
+                    if os.path.isfile(filepath):
                         arcname = os.path.join(
-                            os.path.relpath(root, relroot), file)
-                        zf.write(filename, arcname)
+                            os.path.relpath(root, relroot), filename)
+                        zf.write(filepath, arcname)
 
     def _zip_lambda_file(self, zipfile_name, lambda_file):
         LOG.debug('_zip_lambda_file: lambda_file=%s', lambda_file)
