@@ -16,6 +16,8 @@ lambda:
   memory_size: 128
   timeout: 3
   mode: event
-  event_source: arn:aws:kinesis:us-east-1:084307701560:stream/lambdastream
+  event_sources:
+    -
+      arn: arn:aws:kinesis:us-east-1:084307701560:stream/lambdastream
   test_data: input.json
   

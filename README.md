@@ -1,6 +1,10 @@
 kappa
 =====
 
+[![Build Status](https://travis-ci.org/garnaat/kappa.svg?branch=develop)](https://travis-ci.org/garnaat/kappa)
+
+[![Code Health](https://landscape.io/github/garnaat/kappa/develop/landscape.svg)](https://landscape.io/github/garnaat/kappa/develop)
+
 **Kappa** is a command line tool that (hopefully) makes it easier to
 deploy, update, and test functions for AWS Lambda.
 
