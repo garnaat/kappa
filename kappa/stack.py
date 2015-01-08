@@ -60,6 +60,7 @@ class Stack(object):
         try:
             resources = self._cfn.list_stack_resources(
                 StackName=self.name)
+            LOG.debug(resources)
         except Exception:
             LOG.exception('Unable to find role ARN: %s', role_name)
         for resource in resources['StackResourceSummaries']:
@@ -88,6 +89,7 @@ class Stack(object):
         while not done:
             time.sleep(1)
             response = self._cfn.describe_stacks(StackName=self.name)
+            LOG.debug(response)
             status = response['Stacks'][0]['StackStatus']
             LOG.debug('Stack status is: %s', status)
             if status in self.completed_states:
@@ -100,9 +102,10 @@ class Stack(object):
         LOG.debug('create_stack: stack_name=%s', self.name)
         template_body = open(self.template_path).read()
         try:
-            self._cfn.create_stack(
+            response = self._cfn.create_stack(
                 StackName=self.name, TemplateBody=template_body,
                 Capabilities=['CAPABILITY_IAM'])
+            LOG.debug(response)
         except Exception:
             LOG.exception('Unable to create stack')
         self.wait()
@@ -111,9 +114,10 @@ class Stack(object):
         LOG.debug('create_stack: stack_name=%s', self.name)
         template_body = open(self.template_path).read()
         try:
-            self._cfn.update_stack(
+            response = self._cfn.update_stack(
                 StackName=self.name, TemplateBody=template_body,
                 Capabilities=['CAPABILITY_IAM'])
+            LOG.debug(response)
         except Exception, e:
             if 'ValidationError' in str(e):
                 LOG.info('No Updates Required')
@@ -124,6 +128,7 @@ class Stack(object):
     def delete(self):
         LOG.debug('delete_stack: stack_name=%s', self.name)
         try:
-            self._cfn.delete_stack(StackName=self.name)
+            response = self._cfn.delete_stack(StackName=self.name)
+            LOG.debug(response)
         except Exception:
             LOG.exception('Unable to delete stack: %s', self.name)
