@@ -57,7 +57,7 @@ class Context(object):
 
     @property
     def exec_role_arn(self):
-        return self._stack.invoke_role_arn
+        return self._stack.exec_role_arn
 
     @property
     def invoke_role_arn(self):
