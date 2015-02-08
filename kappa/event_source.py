@@ -89,7 +89,7 @@ class S3EventSource(EventSource):
             'CloudFunctionConfiguration': {
                 'Id': self._make_notification_id(function.name),
                 'Events': [e for e in self._config['events']],
-                'CloudFunction': function.arn(),
+                'CloudFunction': function.arn,
                 'InvocationRole': self._context.invoke_role_arn}}
         try:
             response = self._s3.put_bucket_notification(
