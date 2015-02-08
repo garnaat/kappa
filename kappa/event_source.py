@@ -100,6 +100,15 @@ class S3EventSource(EventSource):
             LOG.exception('Unable to add S3 event source')
 
     def remove(self, function):
+        LOG.debug('removing s3 notification')
         response = self._s3.get_bucket_notification(
             Bucket=self._get_bucket_name())
         LOG.debug(response)
+        if 'CloudFunctionConfiguration' in response:
+            fn_arn = response['CloudFunctionConfiguration']['CloudFunction']
+            if fn_arn == function.arn:
+                del response['CloudFunctionConfiguration']
+                response = self._s3.put_bucket_notification(
+                    Bucket=self._get_bucket_name(),
+                    NotificationConfiguration=response)
+                LOG.debug(response)

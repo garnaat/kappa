@@ -26,8 +26,18 @@ class Log(object):
         aws = kappa.aws.get_aws(self._context)
         self._log_svc = aws.create_client('logs')
 
+    def _check_for_log_group(self):
+        LOG.debug('checking for log group')
+        response = self._log_svc.describe_log_groups()
+        log_group_names = [lg['logGroupName'] for lg in response['logGroups']]
+        return self.log_group_name in log_group_names
+
     def streams(self):
         LOG.debug('getting streams for log group: %s', self.log_group_name)
+        if not self._check_for_log_group():
+            LOG.info(
+                'log group %s has not been created yet', self.log_group_name)
+            return []
         response = self._log_svc.describe_log_streams(
             logGroupName=self.log_group_name)
         LOG.debug(response)
@@ -35,6 +45,10 @@ class Log(object):
 
     def tail(self):
         LOG.debug('tailing log group: %s', self.log_group_name)
+        if not self._check_for_log_group():
+            LOG.info(
+                'log group %s has not been created yet', self.log_group_name)
+            return []
         latest_stream = None
         streams = self.streams()
         for stream in streams:

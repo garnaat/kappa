@@ -34,7 +34,7 @@ from kappa.context import Context
 @click.argument(
     'command',
     required=True,
-    type=click.Choice(['deploy', 'test', 'tail', 'add-event-source', 'delete'])
+    type=click.Choice(['deploy', 'test', 'tail', 'add-event-sources', 'delete'])
 )
 def main(config=None, debug=False, command=None):
     ctx = Context(config, debug)
@@ -54,7 +54,7 @@ def main(config=None, debug=False, command=None):
         click.echo('Deleting ...')
         ctx.delete()
         click.echo('...done')
-    elif command == 'add-event-source':
+    elif command == 'add-event-sources':
         click.echo('Adding event sources ...')
         ctx.add_event_sources()
         click.echo('...done')
