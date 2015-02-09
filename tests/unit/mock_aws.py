@@ -12,6 +12,9 @@ class MockAWS(object):
         client = None
         if client_name == 'logs':
             client = mock.Mock()
+            choices = responses.logs_describe_log_groups
+            client.describe_log_groups = mock.Mock(
+                side_effect=choices)
             choices = responses.logs_describe_log_streams
             client.describe_log_streams = mock.Mock(
                 side_effect=choices)
