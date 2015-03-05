@@ -1,0 +1,24 @@
+---
+profile: personal
+region: us-east-1
+cloudformation:
+  template: roles.cf
+  stack_name: TestS3
+  exec_role: ExecRole
+  invoke_role: InvokeRole
+lambda:
+  name: S3Sample
+  zipfile_name: S3Sample.zip
+  description: Testing S3 Lambda handler
+  path: examplefolder/
+  handler: CreateThumbnail.handler
+  runtime: nodejs
+  memory_size: 128
+  timeout: 3
+  mode: event
+  test_data: input.json
+  event_sources:
+    -
+      arn: arn:aws:s3:::test-1245812163
+      events:
+        - s3:ObjectCreated:*
