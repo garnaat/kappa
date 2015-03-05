@@ -108,10 +108,7 @@ class Context(object):
             event_source.add(self.function)
 
     def deploy(self):
-        if self._stack.exists():
-            self._stack.update()
-        else:
-            self._stack.create()
+        self._stack.update()
         self.function.upload()
 
     def test(self):
@@ -123,3 +120,14 @@ class Context(object):
     def delete(self):
         self._stack.delete()
         self.function.delete()
+        for event_source in self.event_sources:
+            event_source.remove(self.function)
+
+    def status(self):
+        status = {}
+        status['stack'] = self._stack.status()
+        status['function'] = self.function.status()
+        status['event_sources'] = []
+        for event_source in self.event_sources:
+            status['event_sources'].append(event_source.status(self.function))
+        return status
