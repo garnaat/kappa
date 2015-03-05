@@ -31,15 +31,20 @@ your function on.
 
 Kappa is a command line tool.  The basic command format is:
 
-    kappa --config <path to config file> <command>
+    kappa <path to config file> <command> [optional command args]
 
 Where ``command`` is one of:
 
-* deploy - deploy the CloudFormation template containing the IAM roles and zip the function and upload it to AWS Lambda
+* deploy - deploy the CloudFormation template containing the IAM roles and zip
+  the function and upload it to AWS Lambda
 * test - send test data to the new Lambda function
-* tail - display the most recent log events for the function (remember that it can take several minutes before log events are available from CloudWatch)
+* tail - display the most recent log events for the function (remember that it
+  can take several minutes before log events are available from CloudWatch)
 * add-event-sources - hook up an event source to your Lambda function
-* delete - delete the CloudFormation stack containing the IAM roles and delete the Lambda function
+* delete - delete the CloudFormation stack containing the IAM roles and delete
+  the Lambda function
+* status - display summary information about functions, stacks, and event
+  sources related to your project.
 
 The ``config file`` is a YAML format file containing all of the information
 about your Lambda function.
@@ -56,11 +61,11 @@ The basic workflow is:
 * Create your CloudFormation template with the execution and invocation roles
 * Create some sample data
 * Create the YAML config file with all of the information
-* Run ``kappa --config <path-to-config> deploy`` to create roles and upload function
-* Run ``kappa --config <path-to-config> test`` to invoke the function with test data
-* Run ``kappa --config <path-to-config> tail`` to view the functions output in CloudWatch logs
-* Run ``kappa --config <path-to-config> add-event-source`` to hook your function up to the event source
-* Run ``kappa --config <path-to-config> tail`` to see more output
+* Run ``kappa <path-to-config> deploy`` to create roles and upload function
+* Run ``kappa <path-to-config> test`` to invoke the function with test data
+* Run ``kappa <path-to-config> tail`` to view the functions output in CloudWatch logs
+* Run ``kappa <path-to-config> add-event-source`` to hook your function up to the event source
+* Run ``kappa <path-to-config> tail`` to see more output
 
 If you have to make changes in your function or in your IAM roles, simply run
 ``kappa deploy`` again and the changes will be uploaded as necessary.
