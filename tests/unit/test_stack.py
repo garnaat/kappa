@@ -56,10 +56,10 @@ class TestStack(unittest.TestCase):
         stack = Stack(mock_context, Config)
         self.assertTrue(stack.exists())
 
-    def test_create(self):
+    def test_update(self):
         mock_context = mock.Mock()
         stack = Stack(mock_context, Config)
-        stack.create()
+        stack.update()
 
     def test_delete(self):
         mock_context = mock.Mock()

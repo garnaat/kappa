@@ -98,7 +98,7 @@ class Stack(object):
                 msg = 'Could not create stack %s: %s' % (self.name, status)
                 raise ValueError(msg)
 
-    def create(self):
+    def _create(self):
         LOG.debug('create_stack: stack_name=%s', self.name)
         template_body = open(self.template_path).read()
         try:
@@ -110,7 +110,7 @@ class Stack(object):
             LOG.exception('Unable to create stack')
         self.wait()
 
-    def update(self):
+    def _update(self):
         LOG.debug('create_stack: stack_name=%s', self.name)
         template_body = open(self.template_path).read()
         try:
@@ -124,6 +124,15 @@ class Stack(object):
             else:
                 LOG.exception('Unable to update stack')
         self.wait()
+
+    def update(self):
+        if self.exists():
+            self._update()
+        else:
+            self._create()
+
+    def status(self):
+        return self.exists()
 
     def delete(self):
         LOG.debug('delete_stack: stack_name=%s', self.name)

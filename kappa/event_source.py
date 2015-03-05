@@ -13,6 +13,8 @@
 
 import logging
 
+from botocore.exceptions import ClientError
+
 import kappa.aws
 
 LOG = logging.getLogger(__name__)
@@ -70,6 +72,17 @@ class KinesisEventSource(EventSource):
             LOG.debug(response)
         return response
 
+    def status(self, function):
+        LOG.debug('getting status for event source %s', self.arn)
+        try:
+            response = self._lambda.get_event_source(
+                UUID=self._get_uuid(function))
+            LOG.debug(response)
+        except ClientError:
+            LOG.debug('event source %s does not exist', self.arn)
+            response = None
+        return response
+
 
 class S3EventSource(EventSource):
 
@@ -112,3 +125,12 @@ class S3EventSource(EventSource):
                     Bucket=self._get_bucket_name(),
                     NotificationConfiguration=response)
                 LOG.debug(response)
+
+    def status(self, function):
+        LOG.debug('status for s3 notification for %s', function.name)
+        response = self._s3.get_bucket_notification(
+            Bucket=self._get_bucket_name())
+        LOG.debug(response)
+        if 'CloudFunctionConfiguration' not in response:
+            response = None
+        return response

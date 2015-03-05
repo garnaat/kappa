@@ -15,6 +15,8 @@ import logging
 import os
 import zipfile
 
+from botocore.exceptions import ClientError
+
 import kappa.aws
 import kappa.log
 
@@ -146,6 +148,17 @@ class Function(object):
         LOG.debug('deleting function %s', self.name)
         response = self._lambda_svc.delete_function(FunctionName=self.name)
         LOG.debug(response)
+        return response
+
+    def status(self):
+        LOG.debug('getting status for function %s', self.name)
+        try:
+            response = self._lambda_svc.get_function(
+                FunctionName=self.name)
+            LOG.debug(response)
+        except ClientError:
+            LOG.debug('function %s not found', self.name)
+            response = None
         return response
 
     def invoke_asynch(self, data_file):

@@ -18,47 +18,96 @@ import click
 from kappa.context import Context
 
 
-@click.command()
-@click.option(
-    '--config',
-    help="Path to the Kappa config YAML file",
+@click.group()
+@click.argument(
+    'config',
     type=click.File('rb'),
     envvar='KAPPA_CONFIG',
-    default=None
 )
 @click.option(
     '--debug/--no-debug',
     default=False,
     help='Turn on debugging output'
 )
-@click.argument(
-    'command',
-    required=True,
-    type=click.Choice(['deploy', 'test', 'tail', 'add-event-sources', 'delete'])
-)
-def main(config=None, debug=False, command=None):
-    ctx = Context(config, debug)
-    if command == 'deploy':
-        click.echo('Deploying ...')
-        ctx.deploy()
-        click.echo('...done')
-    elif command == 'test':
-        click.echo('Sending test data ...')
-        ctx.test()
-        click.echo('...done')
-    elif command == 'tail':
-        events = ctx.tail()
-        for event in events:
-            print(event['message'])
-    elif command == 'delete':
-        click.echo('Deleting ...')
-        ctx.delete()
-        click.echo('...done')
-    elif command == 'add-event-sources':
-        click.echo('Adding event sources ...')
-        ctx.add_event_sources()
-        click.echo('...done')
+@click.pass_context
+def cli(ctx, config=None, debug=False):
+    config = config
+    ctx.obj['debug'] = debug
+    ctx.obj['config'] = config
+
+@cli.command()
+@click.pass_context
+def deploy(ctx):
+    context = Context(ctx.obj['config'], ctx.obj['debug'])
+    click.echo('deploying...')
+    context.deploy()
+    click.echo('...done')
+    
+@cli.command()
+@click.pass_context
+def test(ctx):
+    context = Context(ctx.obj['config'], ctx.obj['debug'])
+    click.echo('testing...')
+    context.test()
+    click.echo('...done')
+    
+@cli.command()
+@click.pass_context
+def tail(ctx):
+    context = Context(ctx.obj['config'], ctx.obj['debug'])
+    click.echo('tailing logs...')
+    context.tail()
+    click.echo('...done')
+    
+@cli.command()
+@click.pass_context
+def status(ctx):
+    context = Context(ctx.obj['config'], ctx.obj['debug'])
+    status = context.status()
+    click.echo(click.style('Stack', bold=True))
+    if status['stack']:
+        for stack in status['stack']['Stacks']:
+            line = '    {}: {}'.format(stack['StackId'], stack['StackStatus'])
+            click.echo(click.style(line, fg='green'))
+    else:
+        click.echo(click.style('    None', fg='green'))
+    click.echo(click.style('Function', bold=True))
+    if status['function']:
+        line = '    {}'.format(
+            status['function']['Configuration']['FunctionName'])
+        click.echo(click.style(line, fg='green'))
+    else:
+        click.echo(click.style('    None', fg='green'))
+    click.echo(click.style('Event Sources', bold=True))
+    if status['event_sources']:
+        for event_source in status['event_sources']:
+            if 'EventSource' in event_source:
+                line = '    {}: {}'.format(
+                    event_source['EventSource'], event_source['IsActive'])
+                click.echo(click.style(line, fg='green'))
+            else:
+                line = '    {}'.format(
+                    event_source['CloudFunctionConfiguration']['Id'])
+                click.echo(click.style(line, fg='green'))
+    else:
+        click.echo(click.style('    None', fg='green'))
+    
+@cli.command()
+@click.pass_context
+def delete(ctx):
+    context = Context(ctx.obj['config'], ctx.obj['debug'])
+    click.echo('deleting...')
+    context.delete()
+    click.echo('...done')
+    
+@cli.command()
+@click.pass_context
+def add_event_sources(ctx):
+    context = Context(ctx.obj['config'], ctx.obj['debug'])
+    click.echo('adding event sources...')
+    context.add_event_sources()
+    click.echo('...done')
 
 
 if __name__ == '__main__':
-    main()
+    cli(obj={})
