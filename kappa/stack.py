@@ -22,7 +22,7 @@ LOG = logging.getLogger(__name__)
 class Stack(object):
 
     completed_states = ('CREATE_COMPLETE', 'UPDATE_COMPLETE')
-    failed_states = ('ROLLBACK_COMPLETE',)
+    failed_states = ('UPDATE_ROLLBACK_COMPLETE', 'ROLLBACK_COMPLETE')
 
     def __init__(self, context, config):
         self._context = context
