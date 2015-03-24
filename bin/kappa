@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from datetime import datetime
 import logging
 
 import click
@@ -42,7 +43,7 @@ def deploy(ctx):
     click.echo('deploying...')
     context.deploy()
     click.echo('...done')
-    
+
 @cli.command()
 @click.pass_context
 def test(ctx):
@@ -50,15 +51,17 @@ def test(ctx):
     click.echo('testing...')
     context.test()
     click.echo('...done')
-    
+
 @cli.command()
 @click.pass_context
 def tail(ctx):
     context = Context(ctx.obj['config'], ctx.obj['debug'])
     click.echo('tailing logs...')
-    context.tail()
+    for e in context.tail()[-10:]:
+        ts = datetime.utcfromtimestamp(e['timestamp']//1000).isoformat()
+        click.echo("{}: {}".format(ts, e['message']))
     click.echo('...done')
-    
+
 @cli.command()
 @click.pass_context
 def status(ctx):
@@ -91,7 +94,7 @@ def status(ctx):
                 click.echo(click.style(line, fg='green'))
     else:
         click.echo(click.style('    None', fg='green'))
-    
+
 @cli.command()
 @click.pass_context
 def delete(ctx):
@@ -99,7 +102,7 @@ def delete(ctx):
     click.echo('deleting...')
     context.delete()
     click.echo('...done')
-    
+
 @cli.command()
 @click.pass_context
 def add_event_sources(ctx):
