@@ -46,10 +46,6 @@ class Function(object):
         return self._config['handler']
 
     @property
-    def mode(self):
-        return self._config['mode']
-
-    @property
     def description(self):
         return self._config['description']
 
@@ -74,13 +70,17 @@ class Function(object):
         return self._config['test_data']
 
     @property
+    def permissions(self):
+        return self._config.get('permissions', list())
+
+    @property
     def arn(self):
         if self._arn is None:
             try:
-                response = self._lambda_svc.get_function_configuration(
+                response = self._lambda_svc.get_function(
                     FunctionName=self.name)
                 LOG.debug(response)
-                self._arn = response['FunctionARN']
+                self._arn = response['Configuration']['FunctionArn']
             except Exception:
                 LOG.debug('Unable to find ARN for function: %s', self.name)
         return self._arn
@@ -124,25 +124,45 @@ class Function(object):
         else:
             self._zip_lambda_file(zipfile_name, lambda_fn)
 
-    def upload(self):
-        LOG.debug('uploading %s', self.zipfile_name)
+    def add_permissions(self):
+        for permission in self.permissions:
+            try:
+                kwargs = {
+                    'FunctionName': self.name,
+                    'StatementId': permission['statement_id'],
+                    'Action': permission['action'],
+                    'Principal': permission['principal']}
+                source_arn = permission.get('source_arn', None)
+                if source_arn:
+                    kwargs['SourceArn'] = source_arn
+                source_account = permission.get('source_account', None)
+                if source_account:
+                    kwargs['SourceAccount'] = source_account
+                response = self._lambda_svc.add_permission(**kwargs)
+                LOG.debug(response)
+            except Exception:
+                LOG.exception('Unable to add permission')
+
+    def create(self):
+        LOG.debug('creating %s', self.zipfile_name)
         self.zip_lambda_function(self.zipfile_name, self.path)
         with open(self.zipfile_name, 'rb') as fp:
             exec_role = self._context.exec_role_arn
             try:
-                response = self._lambda_svc.upload_function(
+                zipdata = fp.read()
+                response = self._lambda_svc.create_function(
                     FunctionName=self.name,
-                    FunctionZip=fp,
+                    Code={'ZipFile': zipdata},
                     Runtime=self.runtime,
                     Role=exec_role,
                     Handler=self.handler,
-                    Mode=self.mode,
                     Description=self.description,
                     Timeout=self.timeout,
                     MemorySize=self.memory_size)
                 LOG.debug(response)
             except Exception:
                 LOG.exception('Unable to upload zip file')
+        self.add_permissions()
 
     def delete(self):
         LOG.debug('deleting function %s', self.name)
@@ -169,5 +189,14 @@ class Function(object):
                 InvokeArgs=fp)
             LOG.debug(response)
 
-    def test(self):
-        self.invoke_asynch(self.test_data)
+    def invoke(self, test_data=None):
+        if test_data is None:
+            test_data = self.test_data
+        LOG.debug('invoke %s', test_data)
+        with open(test_data) as fp:
+            response = self._lambda_svc.invoke(
+                FunctionName=self.name,
+                LogType='Tail',
+                Payload=fp.read())
+        LOG.debug(response)
+        return response

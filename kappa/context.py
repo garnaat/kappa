@@ -16,7 +16,8 @@ import yaml
 
 import kappa.function
 import kappa.event_source
-import kappa.stack
+import kappa.policy
+import kappa.role
 
 LOG = logging.getLogger(__name__)
 
@@ -32,8 +33,16 @@ class Context(object):
         else:
             self.set_logger('kappa', logging.INFO)
         self.config = yaml.load(config_file)
-        self._stack = kappa.stack.Stack(
-            self, self.config['cloudformation'])
+        if 'policy' in self.config.get('iam', ''):
+            self.policy = kappa.policy.Policy(
+                self, self.config['iam']['policy'])
+        else:
+            self.policy = None
+        if 'role' in self.config.get('iam', ''):
+            self.role = kappa.role.Role(
+                self, self.config['iam']['role'])
+        else:
+            self.role = None
         self.function = kappa.function.Function(
             self, self.config['lambda'])
         self.event_sources = []
@@ -57,11 +66,7 @@ class Context(object):
 
     @property
     def exec_role_arn(self):
-        return self._stack.exec_role_arn
-
-    @property
-    def invoke_role_arn(self):
-        return self._stack.invoke_role_arn
+        return self.role.arn
 
     def debug(self):
         self.set_logger('kappa', logging.DEBUG)
@@ -90,44 +95,64 @@ class Context(object):
         log.addHandler(ch)
 
     def _create_event_sources(self):
-        for event_source_cfg in self.config['lambda']['event_sources']:
-            _, _, svc, _ = event_source_cfg['arn'].split(':', 3)
-            if svc == 'kinesis':
-                self.event_sources.append(
-                    kappa.event_source.KinesisEventSource(
+        if 'event_sources' in self.config['lambda']:
+            for event_source_cfg in self.config['lambda']['event_sources']:
+                _, _, svc, _ = event_source_cfg['arn'].split(':', 3)
+                if svc == 'kinesis':
+                    self.event_sources.append(
+                        kappa.event_source.KinesisEventSource(
+                            self, event_source_cfg))
+                elif svc == 's3':
+                    self.event_sources.append(kappa.event_source.S3EventSource(
                         self, event_source_cfg))
-            elif svc == 's3':
-                self.event_sources.append(kappa.event_source.S3EventSource(
-                    self, event_source_cfg))
-            else:
-                msg = 'Unsupported event source: %s' % event_source_cfg['arn']
-                raise ValueError(msg)
+                elif svc == 'sns':
+                    self.event_sources.append(
+                        kappa.event_source.SNSEventSource(self,
+                                                          event_source_cfg))
+                else:
+                    msg = 'Unknown event source: %s' % event_source_cfg['arn']
+                    raise ValueError(msg)
 
     def add_event_sources(self):
         for event_source in self.event_sources:
             event_source.add(self.function)
 
-    def deploy(self):
-        self._stack.update()
-        self.function.upload()
+    def create(self):
+        if self.policy:
+            self.policy.create()
+        if self.role:
+            self.role.create()
+        self.function.create()
 
-    def test(self):
-        self.function.test()
+    def invoke(self):
+        return self.function.invoke()
 
     def tail(self):
         return self.function.tail()
 
     def delete(self):
-        self._stack.delete()
+        if self.policy:
+            self.policy.delete()
+        if self.role:
+            self.role.delete()
         self.function.delete()
         for event_source in self.event_sources:
             event_source.remove(self.function)
 
     def status(self):
         status = {}
-        status['stack'] = self._stack.status()
+        if self.policy:
+            status['policy'] = self.policy.status()
+        else:
+            status['policy'] = None
+        if self.role:
+            status['role'] = self.role.status()
+        else:
+            status['role'] = None
         status['function'] = self.function.status()
         status['event_sources'] = []
-        for event_source in self.event_sources:
-            status['event_sources'].append(event_source.status(self.function))
+        if self.event_sources:
+            for event_source in self.event_sources:
+                status['event_sources'].append(
+                    event_source.status(self.function))
         return status

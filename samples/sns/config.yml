@@ -1,0 +1,32 @@
+---
+profile: personal
+region: us-east-1
+resources: resources.json
+iam:
+  policy:
+      description: A policy used with the Kappa SNS->DynamoDB example
+      name: LambdaSNSSamplePolicy
+      document: LambdaSNSSamplePolicy.json
+  role:
+      name: SNSSampleRole
+      policy: LambdaSNSSamplePolicy
+lambda:
+  name: SNSSample
+  zipfile_name: SNSSample.zip
+  description: Testing SNS -> DynamoDB Lambda handler
+  path: messageStore.js
+  handler: messageStore.handler
+  runtime: nodejs
+  memory_size: 128
+  timeout: 3
+  permissions:
+    -
+      statement_id: sns_invoke
+      action: lambda:invokeFunction
+      principal: sns.amazonaws.com
+      source_arn: arn:aws:sns:us-east-1:084307701560:lambda_topic
+  event_sources:
+    -
+      arn: arn:aws:sns:us-east-1:084307701560:lambda_topic
+  test_data: input.json
+  
