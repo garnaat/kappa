@@ -77,9 +77,11 @@ class Policy(object):
                     LOG.exception('Error creating Policy')
 
     def delete(self):
-        LOG.debug('deleting policy %s', self.name)
-        response = self._iam_svc.delete_policy(PolicyArn=self.arn)
-        LOG.debug(response)
+        response = None
+        if self.arn:
+            LOG.debug('deleting policy %s', self.name)
+            response = self._iam_svc.delete_policy(PolicyArn=self.arn)
+            LOG.debug(response)
         return response
 
     def status(self):

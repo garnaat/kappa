@@ -13,6 +13,7 @@
 
 import logging
 import yaml
+import time
 
 import kappa.function
 import kappa.event_source
@@ -107,8 +108,12 @@ class Context(object):
                         self, event_source_cfg))
                 elif svc == 'sns':
                     self.event_sources.append(
-                        kappa.event_source.SNSEventSource(self,
-                                                          event_source_cfg))
+                        kappa.event_source.SNSEventSource(
+                            self, event_source_cfg))
+                elif svc == 'dynamodb':
+                    self.event_sources.append(
+                        kappa.event_source.DynamoDBStreamEventSource(
+                            self, event_source_cfg))
                 else:
                     msg = 'Unknown event source: %s' % event_source_cfg['arn']
                     raise ValueError(msg)
@@ -122,7 +127,15 @@ class Context(object):
             self.policy.create()
         if self.role:
             self.role.create()
+        # There is a consistency problem here.
+        # If you don't wait for a bit, the function.create call
+        # will fail because the policy has not been attached to the role.
+        LOG.debug('Waiting for policy/role propogation')
+        time.sleep(5)
         self.function.create()
+
+    def update_code(self):
+        self.function.update()
 
     def invoke(self):
         return self.function.invoke()
@@ -131,13 +144,15 @@ class Context(object):
         return self.function.tail()
 
     def delete(self):
-        if self.policy:
-            self.policy.delete()
-        if self.role:
-            self.role.delete()
-        self.function.delete()
         for event_source in self.event_sources:
             event_source.remove(self.function)
+        self.function.delete()
+        time.sleep(5)
+        if self.role:
+            self.role.delete()
+        time.sleep(5)
+        if self.policy:
+            self.policy.delete()
 
     def status(self):
         status = {}

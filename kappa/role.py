@@ -79,13 +79,28 @@ class Role(object):
                     Path=self.Path, RoleName=self.name,
                     AssumeRolePolicyDocument=AssumeRolePolicyDocument)
                 LOG.debug(response)
-            except Exception:
+                if self._context.policy:
+                    response = self._iam_svc.attach_role_policy(
+                        RoleName=self.name,
+                        PolicyArn=self._context.policy.arn)
+                    LOG.debug(response)
+            except ClientError:
                 LOG.exception('Error creating Role')
 
     def delete(self):
+        response = None
         LOG.debug('deleting role %s', self.name)
-        response = self._iam_svc.delete_role(RoleName=self.name)
-        LOG.debug(response)
+        try:
+            LOG.debug('First detach the policy from the role')
+            policy_arn = self._context.policy.arn
+            if policy_arn:
+                response = self._iam_svc.detach_role_policy(
+                    RoleName=self.name, PolicyArn=policy_arn)
+                LOG.debug(response)
+            response = self._iam_svc.delete_role(RoleName=self.name)
+            LOG.debug(response)
+        except ClientError:
+            LOG.exception('role %s not found', self.name)
         return response
 
     def status(self):

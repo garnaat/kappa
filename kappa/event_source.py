@@ -77,15 +77,25 @@ class KinesisEventSource(EventSource):
         return response
 
     def status(self, function):
+        response = None
         LOG.debug('getting status for event source %s', self.arn)
-        try:
-            response = self._lambda.get_event_source_mapping(
-                UUID=self._get_uuid(function))
-            LOG.debug(response)
-        except ClientError:
-            LOG.debug('event source %s does not exist', self.arn)
-            response = None
+        uuid = self._get_uuid(function)
+        if uuid:
+            try:
+                response = self._lambda.get_event_source_mapping(
+                    UUID=self._get_uuid(function))
+                LOG.debug(response)
+            except ClientError:
+                LOG.debug('event source %s does not exist', self.arn)
+                response = None
+        else:
+            LOG.debug('No UUID for event source %s', self.arn)
         return response
+
+
+class DynamoDBStreamEventSource(KinesisEventSource):
+
+    pass
 
 
 class S3EventSource(EventSource):

@@ -148,6 +148,7 @@ class Function(object):
         self.zip_lambda_function(self.zipfile_name, self.path)
         with open(self.zipfile_name, 'rb') as fp:
             exec_role = self._context.exec_role_arn
+            LOG.debug('exec_role=%s', exec_role)
             try:
                 zipdata = fp.read()
                 response = self._lambda_svc.create_function(
@@ -164,10 +165,27 @@ class Function(object):
                 LOG.exception('Unable to upload zip file')
         self.add_permissions()
 
+    def update(self):
+        LOG.debug('updating %s', self.zipfile_name)
+        self.zip_lambda_function(self.zipfile_name, self.path)
+        with open(self.zipfile_name, 'rb') as fp:
+            try:
+                zipdata = fp.read()
+                response = self._lambda_svc.update_function_code(
+                    FunctionName=self.name,
+                    ZipFile=zipdata)
+                LOG.debug(response)
+            except Exception:
+                LOG.exception('Unable to update zip file')
+
     def delete(self):
         LOG.debug('deleting function %s', self.name)
-        response = self._lambda_svc.delete_function(FunctionName=self.name)
-        LOG.debug(response)
+        response = None
+        try:
+            response = self._lambda_svc.delete_function(FunctionName=self.name)
+            LOG.debug(response)
+        except ClientError:
+            LOG.debug('function %s: not found', self.name)
         return response
 
     def status(self):
