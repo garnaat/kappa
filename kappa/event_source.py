@@ -38,6 +38,10 @@ class EventSource(object):
     def batch_size(self):
         return self._config.get('batch_size', 100)
 
+    @property
+    def enabled(self):
+        return self._config.get('enabled', True)
+
 
 class KinesisEventSource(EventSource):
 
@@ -62,10 +66,25 @@ class KinesisEventSource(EventSource):
                 FunctionName=function.name,
                 EventSourceArn=self.arn,
                 BatchSize=self.batch_size,
-                StartingPosition=self.starting_position)
+                StartingPosition=self.starting_position,
+                Enabled=self.enabled
+            )
             LOG.debug(response)
         except Exception:
-            LOG.exception('Unable to add Kinesis event source')
+            LOG.exception('Unable to add event source')
+
+    def update(self, function):
+        response = None
+        uuid = self._get_uuid(function)
+        if uuid:
+            try:
+                response = self._lambda.update_event_source_mapping(
+                    BatchSize=self.batch_size,
+                    Enabled=self.enabled,
+                    FunctionName=function.arn)
+                LOG.debug(response)
+            except Exception:
+                LOG.exception('Unable to update event source')
 
     def remove(self, function):
         response = None

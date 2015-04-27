@@ -65,6 +65,24 @@ def invoke(ctx):
 
 @cli.command()
 @click.pass_context
+def dryrun(ctx):
+    context = Context(ctx.obj['config'], ctx.obj['debug'])
+    click.echo('invoking dryrun...')
+    response = context.dryrun()
+    click.echo(response)
+    click.echo('...done')
+
+@cli.command()
+@click.pass_context
+def invoke_async(ctx):
+    context = Context(ctx.obj['config'], ctx.obj['debug'])
+    click.echo('invoking async...')
+    response = context.invoke_async()
+    click.echo(response)
+    click.echo('...done')
+
+@cli.command()
+@click.pass_context
 def tail(ctx):
     context = Context(ctx.obj['config'], ctx.obj['debug'])
     click.echo('tailing logs...')
@@ -122,6 +140,14 @@ def add_event_sources(ctx):
     context = Context(ctx.obj['config'], ctx.obj['debug'])
     click.echo('adding event sources...')
     context.add_event_sources()
+    click.echo('...done')
+
+@cli.command()
+@click.pass_context
+def update_event_sources(ctx):
+    context = Context(ctx.obj['config'], ctx.obj['debug'])
+    click.echo('updating event sources...')
+    context.update_event_sources()
     click.echo('...done')
 
 

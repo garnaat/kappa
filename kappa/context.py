@@ -122,6 +122,10 @@ class Context(object):
         for event_source in self.event_sources:
             event_source.add(self.function)
 
+    def update_event_sources(self):
+        for event_source in self.event_sources:
+            event_source.update(self.function)
+
     def create(self):
         if self.policy:
             self.policy.create()
@@ -139,6 +143,12 @@ class Context(object):
 
     def invoke(self):
         return self.function.invoke()
+
+    def dryrun(self):
+        return self.function.dryrun()
+
+    def invoke_async(self):
+        return self.function.invoke_async()
 
     def tail(self):
         return self.function.tail()

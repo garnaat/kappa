@@ -207,14 +207,24 @@ class Function(object):
                 InvokeArgs=fp)
             LOG.debug(response)
 
-    def invoke(self, test_data=None):
+    def _invoke(self, test_data, invocation_type):
         if test_data is None:
             test_data = self.test_data
         LOG.debug('invoke %s', test_data)
         with open(test_data) as fp:
             response = self._lambda_svc.invoke(
                 FunctionName=self.name,
+                InvocationType=invocation_type,
                 LogType='Tail',
                 Payload=fp.read())
         LOG.debug(response)
         return response
+
+    def invoke(self, test_data=None):
+        return self._invoke(test_data, 'RequestResponse')
+
+    def invoke_async(self, test_data=None):
+        return self._invoke(test_data, 'Event')
+
+    def dryrun(self, test_data=None):
+        return self._invoke(test_data, 'DryRun')
