@@ -80,6 +80,7 @@ class Role(object):
                     AssumeRolePolicyDocument=AssumeRolePolicyDocument)
                 LOG.debug(response)
                 if self._context.policy:
+                    LOG.debug('attaching policy %s', self._context.policy.arn)
                     response = self._iam_svc.attach_role_policy(
                         RoleName=self.name,
                         PolicyArn=self._context.policy.arn)
