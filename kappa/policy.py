@@ -13,8 +13,6 @@
 
 import logging
 
-from botocore.exceptions import ClientError
-
 import kappa.aws
 
 LOG = logging.getLogger(__name__)
