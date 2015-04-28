@@ -12,56 +12,47 @@
 # language governing permissions and limitations under the License.
 
 import unittest
-import os
 
 import mock
 
-from kappa.stack import Stack
+from kappa.role import Role
 from tests.unit.mock_aws import get_aws
 
-Config = {
-    'template': 'roles.cf',
-    'stack_name': 'FooBar',
-    'exec_role': 'ExecRole',
-    'invoke_role': 'InvokeRole'}
+Config1 = {'name': 'FooRole'}
+
+Config2 = {'name': 'BazRole'}
 
 
-def path(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
-
-
-class TestStack(unittest.TestCase):
+class TestRole(unittest.TestCase):
 
     def setUp(self):
         self.aws_patch = mock.patch('kappa.aws.get_aws', get_aws)
         self.mock_aws = self.aws_patch.start()
-        Config['template'] = path(Config['template'])
 
     def tearDown(self):
         self.aws_patch.stop()
 
     def test_properties(self):
         mock_context = mock.Mock()
-        stack = Stack(mock_context, Config)
-        self.assertEqual(stack.name, Config['stack_name'])
-        self.assertEqual(stack.template_path, Config['template'])
-        self.assertEqual(stack.exec_role, Config['exec_role'])
-        self.assertEqual(stack.invoke_role, Config['invoke_role'])
-        self.assertEqual(
-            stack.invoke_role_arn,
-            'arn:aws:iam::0123456789012:role/TestKinesis-InvokeRole-FOO')
+        role = Role(mock_context, Config1)
+        self.assertEqual(role.name, Config1['name'])
 
     def test_exists(self):
         mock_context = mock.Mock()
-        stack = Stack(mock_context, Config)
-        self.assertTrue(stack.exists())
+        role = Role(mock_context, Config1)
+        self.assertTrue(role.exists())
 
-    def test_update(self):
+    def test_not_exists(self):
         mock_context = mock.Mock()
-        stack = Stack(mock_context, Config)
-        stack.update()
+        role = Role(mock_context, Config2)
+        self.assertFalse(role.exists())
+
+    def test_create(self):
+        mock_context = mock.Mock()
+        role = Role(mock_context, Config2)
+        role.create()
 
     def test_delete(self):
         mock_context = mock.Mock()
-        stack = Stack(mock_context, Config)
-        stack.delete()
+        role = Role(mock_context, Config1)
+        role.delete()

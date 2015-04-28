@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Mitch Garnaat http://garnaat.org/
+# Copyright (c) 2014,2015 Mitch Garnaat http://garnaat.org/
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -11,21 +11,20 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import botocore.session
+import boto3
 
 
 class __AWS(object):
 
-    def __init__(self, profile=None, region=None):
+    def __init__(self, profile_name=None, region_name=None):
         self._client_cache = {}
-        self._session = botocore.session.get_session()
-        self._session.profile = profile
-        self._region = region
+        self._session = boto3.session.Session(
+            region_name=region_name, profile_name=profile_name)
 
     def create_client(self, client_name):
         if client_name not in self._client_cache:
-            self._client_cache[client_name] = self._session.create_client(
-                client_name, self._region)
+            self._client_cache[client_name] = self._session.client(
+                client_name)
         return self._client_cache[client_name]
 
 

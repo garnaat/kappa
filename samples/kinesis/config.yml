@@ -1,11 +1,9 @@
 ---
 profile: personal
 region: us-east-1
-cloudformation:
-  template: roles.cf
-  stack_name: TestKinesis
-  exec_role: ExecRole
-  invoke_role: InvokeRole
+iam:
+  role_name: KinesisSampleRole
+  role_policy: AWSLambdaKinesisExecutionRole
 lambda:
   name: KinesisSample
   zipfile_name: KinesisSample.zip
@@ -15,9 +13,10 @@ lambda:
   runtime: nodejs
   memory_size: 128
   timeout: 3
-  mode: event
   event_sources:
     -
       arn: arn:aws:kinesis:us-east-1:084307701560:stream/lambdastream
+      starting_position: TRIM_HORIZON
+      batch_size: 100
   test_data: input.json
   

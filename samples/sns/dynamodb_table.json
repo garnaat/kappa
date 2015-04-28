@@ -1,0 +1,49 @@
+{
+    "TableName": "snslambda", 
+    "AttributeDefinitions": [
+        {
+            "AttributeName": "SnsTopicArn", 
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "SnsPublishTime", 
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "SnsMessageId", 
+            "AttributeType": "S"
+        }
+    ], 
+    "KeySchema": [
+        {
+            "AttributeName": "SnsTopicArn", 
+            "KeyType": "HASH"
+        },
+        {
+            "AttributeName": "SnsPublishTime", 
+            "KeyType": "RANGE"
+        }
+    ], 
+    "GlobalSecondaryIndexes": [
+        {
+            "IndexName": "MesssageIndex", 
+            "KeySchema": [
+                {
+                    "AttributeName": "SnsMessageId", 
+                    "KeyType": "HASH"
+                }
+            ], 
+            "Projection": {
+                "ProjectionType": "ALL"
+            }, 
+            "ProvisionedThroughput": {
+                "ReadCapacityUnits": 5, 
+                "WriteCapacityUnits": 1
+            }
+        }
+    ], 
+    "ProvisionedThroughput": {
+        "ReadCapacityUnits": 5, 
+        "WriteCapacityUnits": 5
+    }
+}

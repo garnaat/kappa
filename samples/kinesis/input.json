@@ -12,8 +12,8 @@
             "invokeIdentityArn": "arn:aws:iam::059493405231:role/testLEBRole",
             "eventVersion": "1.0",
             "eventName": "aws:kinesis:record",
-            "eventSourceARN": "arn:aws:kinesis:us-east-1:35667example:stream/examplestream",
-            "awsRegion": "us-east-1"
+            "eventSourceARN": "arn:aws:kinesis:us-west-2:35667example:stream/examplestream",
+            "awsRegion": "us-west-2"
         }
     ]
 }
