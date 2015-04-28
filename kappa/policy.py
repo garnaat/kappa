@@ -20,8 +20,6 @@ LOG = logging.getLogger(__name__)
 
 class Policy(object):
 
-    Path = '/kappa/'
-
     def __init__(self, context, config):
         self._context = context
         self._config = config
@@ -39,7 +37,11 @@ class Policy(object):
 
     @property
     def document(self):
-        return self._config['document']
+        return self._config.get('document', None)
+
+    @property
+    def path(self):
+        return self._config.get('path', '/kappa/')
 
     @property
     def arn(self):
@@ -49,25 +51,36 @@ class Policy(object):
                 self._arn = policy.get('Arn', None)
         return self._arn
 
-    def exists(self):
+    def _find_all_policies(self):
+        # boto3 does not currently do pagination for ListPolicies
+        # so we have to do it ourselves
+        policies = []
         try:
-            response = self._iam_svc.list_policies(PathPrefix=self.Path)
-            LOG.debug(response)
-            for policy in response['Policies']:
-                if policy['PolicyName'] == self.name:
-                    return policy
+            response = self._iam_svc.list_policies()
+            policies += response['Policies']
+            while response['IsTruncated']:
+                LOG.debug('getting another page of policies')
+                response = self._iam_svc.list_policies(
+                    Marker=response['Marker'])
+                policies += response['Policies']
         except Exception:
             LOG.exception('Error listing policies')
+        return policies
+
+    def exists(self):
+        for policy in self._find_all_policies():
+            if policy['PolicyName'] == self.name:
+                return policy
         return None
 
     def create(self):
         LOG.debug('creating policy %s', self.name)
         policy = self.exists()
-        if not policy:
+        if not policy and self.document:
             with open(self.document, 'rb') as fp:
                 try:
                     response = self._iam_svc.create_policy(
-                        Path=self.Path, PolicyName=self.name,
+                        Path=self.path, PolicyName=self.name,
                         PolicyDocument=fp.read(),
                         Description=self.description)
                     LOG.debug(response)
@@ -76,7 +89,9 @@ class Policy(object):
 
     def delete(self):
         response = None
-        if self.arn:
+        # Only delete the policy if it has a document associated with it.
+        # This indicates that it was a custom policy created by kappa.
+        if self.arn and self.document:
             LOG.debug('deleting policy %s', self.name)
             response = self._iam_svc.delete_policy(PolicyArn=self.arn)
             LOG.debug(response)

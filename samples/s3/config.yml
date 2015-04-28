@@ -1,11 +1,16 @@
 ---
+# Change profile and region to suit your application
 profile: personal
 region: us-east-1
-cloudformation:
-  template: roles.cf
-  stack_name: TestS3
-  exec_role: ExecRole
-  invoke_role: InvokeRole
+iam:
+  # In this case, we are using an existing managed policy so we just
+  # need to put the name of that policy here.
+  policy:
+    name: AWSLambdaExecute
+  # The name of the IAM role used for executing the Lambda function.
+  # The policy listed above will be attached to this role once it is created.
+  role:
+    name: KappaS3SampleRole
 lambda:
   name: S3Sample
   zipfile_name: S3Sample.zip

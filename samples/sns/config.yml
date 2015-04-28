@@ -1,4 +1,5 @@
 ---
+# change profile and region to suit your needs
 profile: personal
 region: us-east-1
 resources: resources.json
@@ -24,9 +25,11 @@ lambda:
       statement_id: sns_invoke
       action: lambda:invokeFunction
       principal: sns.amazonaws.com
+      # change this to refer to your own SNS topic
       source_arn: arn:aws:sns:us-east-1:084307701560:lambda_topic
   event_sources:
     -
+      # change this to refer to your own SNS topic
       arn: arn:aws:sns:us-east-1:084307701560:lambda_topic
   test_data: input.json
   
