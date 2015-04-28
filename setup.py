@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 import os
 
 requires = [
-    'boto3==0.0.15',
+    'boto3==0.0.16',
     'click==4.0',
     'PyYAML>=3.11'
 ]
