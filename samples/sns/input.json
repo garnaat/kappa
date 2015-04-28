@@ -1,0 +1,21 @@
+{
+  "Records":[
+    {
+      "EventSource":"aws:sns",
+      "EventVersion": "1.0",
+      "EventSubscriptionArn": "arn:aws:sns:us-east-1:123456789012:lambda_topic:0b6941c3-f04d-4d3e-a66d-b1df00e1e381",
+      "Sns":{
+          "Type" : "Notification",
+          "MessageId" : "e70fa8dd-0d77-5944-8862-e569494b48b5",
+          "TopicArn" : "arn:aws:sns:us-east-1:658794617753:lambda-chat",
+          "Message" : "{\"name\":\"Mitch Garnaat\",\"message\":\"just testing this out\"}",
+          "Timestamp" : "2015-04-24T13:15:40.632Z",
+          "Channel" : "foo",
+          "SignatureVersion" : "1",
+          "Signature" : "n0zU4mvKQT5vy6RbDK3BoiWQrFBirbaIGRQOVXE4Vx1XE0SrsXBo4mPm2eDMgjFboP0RJxRCvkFpN07mbnVOIoT2UWKVD2hU1vLdTlEPE4ppSSx17KzhABsOuA8XwijL3hm4cpVHmCmhNXcKekC+fGCryjf9cxr6ODm45PxxE4WLSak85uLzgWhfbAEgPqD2Q/Fa3NwJIyBkZWEdlpJCeaZb4gCzPauvcynRyzWS+e+76WpXMgInCU2y7lhtajDpHrDlZ13UvHOWAQONFRGJXsxFeP370tnzVKfdfMPNbmr4gb3dk+VP0+PsyrIakqp31cO5umUZwSeVZaXLQLewmg==",
+          "SigningCertURL" : "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-d6d679a1d18e95c2f9ffcf11f4f9e198.pem",
+          "UnsubscribeURL" : "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:658794617753:lambda-chat:f1bde0aa-11eb-4417-a9cf-6a00c6aac0a7"
+      }
+    }
+  ]
+}

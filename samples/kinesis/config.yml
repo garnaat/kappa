@@ -1,9 +1,16 @@
 ---
+# Change the profile and region to suit your application
 profile: personal
 region: us-east-1
 iam:
-  role_name: KinesisSampleRole
-  role_policy: AWSLambdaKinesisExecutionRole
+  # In this case, we are using an existing managed policy so we just
+  # need to put the name of that policy here.
+  policy:
+    name: AWSLambdaKinesisExecutionRole
+  # The name of the IAM role used for executing the Lambda function.
+  # The policy listed above will be attached to this role once it is created.
+  role:
+    name: KinesisSampleRole
 lambda:
   name: KinesisSample
   zipfile_name: KinesisSample.zip
@@ -15,6 +22,8 @@ lambda:
   timeout: 3
   event_sources:
     -
+      # You need to change this arn to point to your own kinesis
+      # stream that you have created separately.
       arn: arn:aws:kinesis:us-east-1:084307701560:stream/lambdastream
       starting_position: TRIM_HORIZON
       batch_size: 100

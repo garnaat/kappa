@@ -213,4 +213,4 @@ class SNSEventSource(EventSource):
 
     def status(self, function):
         LOG.debug('status for SNS notification for %s', function.name)
-        return self.exist(function)
+        return self.exists(function)

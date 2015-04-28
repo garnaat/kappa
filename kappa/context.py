@@ -58,10 +58,6 @@ class Context(object):
         return self.config.get('region', None)
 
     @property
-    def cfn_config(self):
-        return self.config.get('cloudformation', None)
-
-    @property
     def lambda_config(self):
         return self.config.get('lambda', None)
 

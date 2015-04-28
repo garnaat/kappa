@@ -16,7 +16,9 @@ exports.handler = function(event, context) {
 	// Read options from the event.
 	console.log("Reading options from event:\n", util.inspect(event, {depth: 5}));
 	var srcBucket = event.Records[0].s3.bucket.name;
-	var srcKey    = event.Records[0].s3.object.key;
+	// Object key may have spaces or unicode non-ASCII characters.
+    var srcKey    =
+    decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));  
 	var dstBucket = srcBucket + "resized";
 	var dstKey    = "resized-" + srcKey;
 
