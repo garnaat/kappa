@@ -52,7 +52,7 @@ class Policy(object):
         return self._arn
 
     def _find_all_policies(self):
-        # boto3 does not currently do pagination for ListPolicies
+        # boto3 does not currently do pagination
         # so we have to do it ourselves
         policies = []
         try:

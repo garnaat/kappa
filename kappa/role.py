@@ -59,15 +59,26 @@ class Role(object):
                 LOG.debug('Unable to find ARN for role: %s', self.name)
         return self._arn
 
-    def exists(self):
+    def _find_all_roles(self):
+        # boto3 does not currently do pagination
+        # so we have to do it ourselves
+        roles = []
         try:
-            response = self._iam_svc.list_roles(PathPrefix=self.Path)
-            LOG.debug(response)
-            for role in response['Roles']:
-                if role['RoleName'] == self.name:
-                    return role
+            response = self._iam_svc.list_roles()
+            roles += response['Roles']
+            while response['IsTruncated']:
+                LOG.debug('getting another page of roles')
+                response = self._iam_svc.list_roles(
+                    Marker=response['Marker'])
+                roles += response['Roles']
         except Exception:
             LOG.exception('Error listing roles')
+        return roles
+
+    def exists(self):
+        for role in self._find_all_roles():
+            if role['RoleName'] == self.name:
+                return role
         return None
 
     def create(self):
