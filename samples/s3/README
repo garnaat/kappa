@@ -1,0 +1,10 @@
+This example requires some additionaly nodejs packages to be incuded in the zip
+file that is uploaded to AWS.
+
+To install these, first make sure you have nodejs installed locally.  Then:
+
+1. cd examplefolder
+2. npm install async gm
+
+This will create a node_modules directory under examplefolder and the required
+nodejs packages will be included within that directory.
