@@ -135,8 +135,7 @@ class S3EventSource(EventSource):
             'CloudFunctionConfiguration': {
                 'Id': self._make_notification_id(function.name),
                 'Events': [e for e in self._config['events']],
-                'CloudFunction': function.arn,
-                'InvocationRole': self._context.invoke_role_arn}}
+                'CloudFunction': function.arn}}
         try:
             response = self._s3.put_bucket_notification(
                 Bucket=self._get_bucket_name(),
@@ -154,6 +153,7 @@ class S3EventSource(EventSource):
             fn_arn = response['CloudFunctionConfiguration']['CloudFunction']
             if fn_arn == function.arn:
                 del response['CloudFunctionConfiguration']
+                del response['ResponseMetadata']
                 response = self._s3.put_bucket_notification(
                     Bucket=self._get_bucket_name(),
                     NotificationConfiguration=response)

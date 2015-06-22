@@ -22,6 +22,13 @@ lambda:
   timeout: 3
   mode: event
   test_data: input.json
+  permissions:
+    -
+      statement_id: s3_invoke
+      action: lambda:invokeFunction
+      principal: s3.amazonaws.com
+      # change this to refer to your own SNS topic
+      source_arn: arn:aws:s3:::test-1245812163
   event_sources:
     -
       arn: arn:aws:s3:::test-1245812163
