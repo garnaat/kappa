@@ -13,6 +13,7 @@
 
 import logging
 import os
+import time
 import zipfile
 
 from botocore.exceptions import ClientError
@@ -92,9 +93,17 @@ class Function(object):
             self._log = kappa.log.Log(self._context, log_group_name)
         return self._log
 
-    def tail(self):
-        LOG.debug('tailing function: %s', self.name)
-        return self.log.tail()
+    def tail(self, attempt=0):
+        try:
+            LOG.debug('tailing function: %s', self.name)
+            log_result = self.log.tail() 
+            return log_result 
+	except Exception, e:
+            if attempt > 10:
+		return e
+            else:
+                time.sleep(attempt)
+                return self.tail(attempt+1)
 
     def _zip_lambda_dir(self, zipfile_name, lambda_dir):
         LOG.debug('_zip_lambda_dir: lambda_dir=%s', lambda_dir)
