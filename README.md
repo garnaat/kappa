@@ -52,7 +52,7 @@ Where ``command`` is one of:
   back.  Don't actually run the code.
 * tail - display the most recent log events for the function (remember that it
   can take several minutes before log events are available from CloudWatch)
-* add-event-sources - hook up an event source to your Lambda function
+* add_event_sources - hook up an event source to your Lambda function
 * delete - delete the Lambda function, remove any event sources, delete the IAM
   policy and role
 * update_code - Upload new code for your Lambda function
@@ -80,5 +80,5 @@ The basic workflow is:
 * Run ``kappa <path-to-config> invoke`` to invoke the function with test data
 * Run ``kappa <path-to-config> update_code`` to upload new code for your Lambda
   function
-* Run ``kappa <path-to-config> add-event-source`` to hook your function up to the event source
+* Run ``kappa <path-to-config> add_event_sources`` to hook your function up to the event source
 * Run ``kappa <path-to-config> tail`` to see more output
