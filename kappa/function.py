@@ -98,9 +98,9 @@ class Function(object):
             LOG.debug('tailing function: %s', self.name)
             log_result = self.log.tail() 
             return log_result 
-    except Exception, e:
+        except Exception, e:
             if attempt > 10:
-        return e
+                return e
             else:
                 time.sleep(attempt)
                 return self.tail(attempt+1)
