@@ -13,9 +13,11 @@
 
 import logging
 
-LOG = logging.getLogger(__name__)
+from botocore.exceptions import ClientError
 
 import kappa.aws
+
+LOG = logging.getLogger(__name__)
 
 
 class Log(object):
@@ -61,3 +63,11 @@ class Log(object):
             logStreamName=latest_stream['logStreamName'])
         LOG.debug(response)
         return response['events']
+
+    def delete(self):
+        try:
+            response = self._log_svc.delete_log_group(
+                logGroupName=self.log_group_name)
+            LOG.debug(response)
+        except ClientError:
+            LOG.debug('unable to delete log group')
