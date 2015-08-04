@@ -152,6 +152,7 @@ class Context(object):
     def delete(self):
         for event_source in self.event_sources:
             event_source.remove(self.function)
+        self.function.log.delete()
         self.function.delete()
         time.sleep(5)
         if self.role:
