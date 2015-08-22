@@ -144,6 +144,9 @@ class S3EventSource(EventSource):
         except Exception:
             LOG.exception('Unable to add S3 event source')
 
+    def update(self, function):
+        self.add(function)
+
     def remove(self, function):
         LOG.debug('removing s3 notification')
         response = self._s3.get_bucket_notification(
@@ -199,6 +202,9 @@ class SNSEventSource(EventSource):
             LOG.debug(response)
         except Exception:
             LOG.exception('Unable to add SNS event source')
+
+    def update(self, function):
+        self.add(function)
 
     def remove(self, function):
         LOG.debug('removing SNS event source')
