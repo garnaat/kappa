@@ -132,16 +132,21 @@ class S3EventSource(EventSource):
 
     def add(self, function):
         notification_spec = {
-            'CloudFunctionConfiguration': {
-                'Id': self._make_notification_id(function.name),
-                'Events': [e for e in self._config['events']],
-                'CloudFunction': function.arn}}
+            'LambdaFunctionConfigurations':[
+                {
+                    'Id': self._make_notification_id(function.name),
+                    'Events': [e for e in self._config['events']],
+                    'LambdaFunctionArn': function.arn,
+                }
+            ]
+        }
         try:
-            response = self._s3.put_bucket_notification(
+            response = self._s3.put_bucket_notification_configuration(
                 Bucket=self._get_bucket_name(),
                 NotificationConfiguration=notification_spec)
             LOG.debug(response)
-        except Exception:
+        except Exception as exc:
+            LOG.debug(exc.response)
             LOG.exception('Unable to add S3 event source')
 
     def update(self, function):
