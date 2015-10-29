@@ -1,19 +1,21 @@
-# Copyright (c) 2014 Mitch Garnaat http://garnaat.org/
+# Copyright (c) 2014, 2015 Mitch Garnaat
 #
-# Licensed under the Apache License, Version 2.0 (the "License"). You
-# may not use this file except in compliance with the License. A copy of
-# the License is located at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# http://aws.amazon.com/apache2.0/
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# or in the "license" file accompanying this file. This file is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-# ANY KIND, either express or implied. See the License for the specific
-# language governing permissions and limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import logging
 import yaml
 import time
+import os
 
 import kappa.function
 import kappa.event_source
@@ -28,34 +30,53 @@ InfoFmtString = '\t%(message)s'
 
 class Context(object):
 
-    def __init__(self, config_file, debug=False):
+    def __init__(self, config_file, environment=None, debug=False):
         if debug:
             self.set_logger('kappa', logging.DEBUG)
         else:
             self.set_logger('kappa', logging.INFO)
+        self._load_cache()
         self.config = yaml.load(config_file)
-        if 'policy' in self.config.get('iam', ''):
-            self.policy = kappa.policy.Policy(
-                self, self.config['iam']['policy'])
-        else:
-            self.policy = None
-        if 'role' in self.config.get('iam', ''):
-            self.role = kappa.role.Role(
-                self, self.config['iam']['role'])
-        else:
-            self.role = None
+        self.environment = environment
+        self.policy = kappa.policy.Policy(
+            self, self.config['environments'][self.environment])
+        self.role = kappa.role.Role(
+            self, self.config['environments'][self.environment])
         self.function = kappa.function.Function(
             self, self.config['lambda'])
         self.event_sources = []
         self._create_event_sources()
 
+    def _load_cache(self):
+        self.cache = {}
+        if os.path.isdir('.kappa'):
+            cache_file = os.path.join('.kappa', 'cache')
+            if os.path.isfile(cache_file):
+                with open(cache_file, 'rb') as fp:
+                    self.cache = yaml.load(fp)
+
+    def save_cache(self):
+        if not os.path.isdir('.kappa'):
+            os.mkdir('.kappa')
+        cache_file = os.path.join('.kappa', 'cache')
+        with open(cache_file, 'wb') as fp:
+            yaml.dump(self.cache, fp)
+
+    @property
+    def name(self):
+        return self.config.get('name', None)
+
     @property
     def profile(self):
-        return self.config.get('profile', None)
+        return self.config['environments'][self.environment]['profile']
 
     @property
     def region(self):
-        return self.config.get('region', None)
+        return self.config['environments'][self.environment]['region']
+
+    @property
+    def record_path(self):
+        return self.config.get('record_path', None)
 
     @property
     def lambda_config(self):
@@ -133,6 +154,18 @@ class Context(object):
         LOG.debug('Waiting for policy/role propogation')
         time.sleep(5)
         self.function.create()
+
+    def deploy(self):
+        if self.policy:
+            self.policy.deploy()
+        if self.role:
+            self.role.create()
+        # There is a consistency problem here.
+        # If you don't wait for a bit, the function.create call
+        # will fail because the policy has not been attached to the role.
+        LOG.debug('Waiting for policy/role propogation')
+        time.sleep(5)
+        self.function.deploy()
 
     def update_code(self):
         self.function.update()

@@ -5,8 +5,8 @@ from setuptools import setup, find_packages
 import os
 
 requires = [
-    'boto3==1.1.1',
-    'click==4.0',
+    'boto3==1.2.0',
+    'click>=5.0',
     'PyYAML>=3.11'
 ]
 
@@ -22,7 +22,10 @@ setup(
     packages=find_packages(exclude=['tests*']),
     package_data={'kappa': ['_version']},
     package_dir={'kappa': 'kappa'},
-    scripts=['bin/kappa'],
+    entry_points="""
+        [console_scripts]
+        kappa=kappa.scripts.cli:cli
+    """,
     install_requires=requires,
     license=open("LICENSE").read(),
     classifiers=(

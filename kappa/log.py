@@ -1,21 +1,22 @@
-# Copyright (c) 2014 Mitch Garnaat http://garnaat.org/
+# Copyright (c) 2014, 2015 Mitch Garnaat
 #
-# Licensed under the Apache License, Version 2.0 (the "License"). You
-# may not use this file except in compliance with the License. A copy of
-# the License is located at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# http://aws.amazon.com/apache2.0/
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# or in the "license" file accompanying this file. This file is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-# ANY KIND, either express or implied. See the License for the specific
-# language governing permissions and limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import logging
 
 from botocore.exceptions import ClientError
 
-import kappa.aws
+import kappa.awsclient
 
 LOG = logging.getLogger(__name__)
 
@@ -25,12 +26,11 @@ class Log(object):
     def __init__(self, context, log_group_name):
         self._context = context
         self.log_group_name = log_group_name
-        aws = kappa.aws.get_aws(self._context)
-        self._log_svc = aws.create_client('logs')
+        self._log_client = kappa.awsclient.create_client('logs', context)
 
     def _check_for_log_group(self):
         LOG.debug('checking for log group')
-        response = self._log_svc.describe_log_groups()
+        response = self._log_client.call('describe_log_groups')
         log_group_names = [lg['logGroupName'] for lg in response['logGroups']]
         return self.log_group_name in log_group_names
 
@@ -40,7 +40,8 @@ class Log(object):
             LOG.info(
                 'log group %s has not been created yet', self.log_group_name)
             return []
-        response = self._log_svc.describe_log_streams(
+        response = self._log_client.call(
+            'describe_log_streams',
             logGroupName=self.log_group_name)
         LOG.debug(response)
         return response['logStreams']
@@ -58,7 +59,8 @@ class Log(object):
                 latest_stream = stream
             elif stream['lastEventTimestamp'] > latest_stream['lastEventTimestamp']:
                 latest_stream = stream
-        response = self._log_svc.get_log_events(
+        response = self._log_client.call(
+            'get_log_events',
             logGroupName=self.log_group_name,
             logStreamName=latest_stream['logStreamName'])
         LOG.debug(response)
@@ -66,7 +68,8 @@ class Log(object):
 
     def delete(self):
         try:
-            response = self._log_svc.delete_log_group(
+            response = self._log_client.call(
+                'delete_log_group',
                 logGroupName=self.log_group_name)
             LOG.debug(response)
         except ClientError:
