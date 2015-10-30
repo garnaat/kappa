@@ -131,7 +131,7 @@ class Function(object):
         relroot = os.path.abspath(lambda_dir)
         with zipfile.ZipFile(zipfile_name, 'w',
                              compression=zipfile.ZIP_DEFLATED) as zf:
-            for root, dirs, files in os.walk(lambda_dir):
+            for root, _, files in os.walk(lambda_dir):
                 zf.write(root, os.path.relpath(root, relroot))
                 for filename in files:
                     filepath = os.path.join(root, filename)
@@ -248,7 +248,7 @@ class Function(object):
         return response['Versions']
 
     def create_alias(self, name, description, version=None):
-        LOG.debug('creating alias of ', self.name)
+        LOG.debug('creating alias of %s', self.name)
         if version is None:
             version = self.version
         try:
