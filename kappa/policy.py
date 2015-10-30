@@ -131,9 +131,8 @@ class Policy(object):
             m = hashlib.md5()
             m.update(document)
             policy_md5 = m.hexdigest()
-            LOG.debug('policy_md5: {}'.format(policy_md5))
-            LOG.debug('cache md5: {}'.format(
-                self._context.cache.get('policy_md5')))
+            LOG.debug('policy_md5: %s', policy_md5)
+            LOG.debug('cache md5: %s', self._context.cache.get('policy_md5'))
             if policy_md5 != self._context.cache.get('policy_md5'):
                 self._context.cache['policy_md5'] = policy_md5
                 self._context.save_cache()

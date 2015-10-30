@@ -224,7 +224,7 @@ class Function(object):
         return self.create()
 
     def publish_version(self, description):
-        LOG.debug('publishing version of ', self.name)
+        LOG.debug('publishing version of %s', self.name)
         try:
             response = self._lambda_client.call(
                 'publish_version',
@@ -237,7 +237,7 @@ class Function(object):
         return response['Version']
 
     def list_versions(self):
-        LOG.debug('listing versions of ', self.name)
+        LOG.debug('listing versions of %s', self.name)
         try:
             response = self._lambda_client.call(
                 'list_versions_by_function',
@@ -263,7 +263,7 @@ class Function(object):
             LOG.exception('Unable to create alias')
 
     def list_aliases(self):
-        LOG.debug('listing aliases of ', self.name)
+        LOG.debug('listing aliases of %s', self.name)
         try:
             response = self._lambda_client.call(
                 'list_aliases',
