@@ -207,4 +207,26 @@ def update_event_sources(ctx):
     click.echo('done')
 
 
+@cli.command()
+@click.pass_context
+def enable_event_sources(ctx):
+    """Enable event sources specified in the config file"""
+    context = Context(ctx.obj['config'], ctx.obj['environment'],
+                      ctx.obj['debug'], ctx.obj['force'])
+    click.echo('enabling event sources')
+    context.enable_event_sources()
+    click.echo('done')
+
+
+@cli.command()
+@click.pass_context
+def disable_event_sources(ctx):
+    """Disable event sources specified in the config file"""
+    context = Context(ctx.obj['config'], ctx.obj['environment'],
+                      ctx.obj['debug'], ctx.obj['force'])
+    click.echo('enabling event sources')
+    context.disable_event_sources()
+    click.echo('done')
+
+
 cli(obj={})

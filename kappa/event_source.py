@@ -75,6 +75,30 @@ class KinesisEventSource(EventSource):
         except Exception:
             LOG.exception('Unable to add event source')
 
+    def enable(self, function):
+        self.enabled = True
+        try:
+            response = self._lambda.call(
+                'update_event_source_mapping',
+                FunctionName=function.name,
+                Enabled=self.enabled
+            )
+            LOG.debug(response)
+        except Exception:
+            LOG.exception('Unable to enable event source')
+
+    def disable(self, function):
+        self.enabled = False
+        try:
+            response = self._lambda.call(
+                'update_event_source_mapping',
+                FunctionName=function.name,
+                Enabled=self.enabled
+            )
+            LOG.debug(response)
+        except Exception:
+            LOG.exception('Unable to disable event source')
+
     def update(self, function):
         response = None
         uuid = self._get_uuid(function)
