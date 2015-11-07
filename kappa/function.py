@@ -181,7 +181,7 @@ class Function(object):
         config_path = os.path.join(self.path, config_name)
         if os.path.exists(config_path):
             dest_path = os.path.join(self.path, 'config.json')
-            LOG.info('copy {} to {}'.format(config_path, dest_path))
+            LOG.info('copy %s to %s', config_path, dest_path)
             shutil.copyfile(config_path, dest_path)
 
     def create(self):
