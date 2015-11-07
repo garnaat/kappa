@@ -25,12 +25,13 @@ import kappa.role
 LOG = logging.getLogger(__name__)
 
 DebugFmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-InfoFmtString = '\t%(message)s'
+InfoFmtString = '...%(message)s'
 
 
 class Context(object):
 
-    def __init__(self, config_file, environment=None, debug=False):
+    def __init__(self, config_file, environment=None,
+                 debug=False, force=False):
         if debug:
             self.set_logger('kappa', logging.DEBUG)
         else:
@@ -38,6 +39,7 @@ class Context(object):
         self._load_cache()
         self.config = yaml.load(config_file)
         self.environment = environment
+        self.force = force
         self.policy = kappa.policy.Policy(
             self, self.config['environments'][self.environment])
         self.role = kappa.role.Role(
@@ -171,6 +173,9 @@ class Context(object):
         self.function.update()
 
     def invoke(self):
+        return self.function.invoke()
+
+    def test(self):
         return self.function.invoke()
 
     def dryrun(self):

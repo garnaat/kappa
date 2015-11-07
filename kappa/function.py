@@ -16,6 +16,7 @@ import logging
 import os
 import zipfile
 import time
+import shutil
 
 from botocore.exceptions import ClientError
 
@@ -122,7 +123,7 @@ class Function(object):
         return self._log
 
     def tail(self):
-        LOG.debug('tailing function: %s', self.name)
+        LOG.info('tailing function: %s', self.name)
         return self.log.tail()
 
     def _zip_lambda_dir(self, zipfile_name, lambda_dir):
@@ -175,8 +176,17 @@ class Function(object):
             except Exception:
                 LOG.exception('Unable to add permission')
 
+    def _copy_config_file(self):
+        config_name = '{}_config.json'.format(self._context.environment)
+        config_path = os.path.join(self.path, config_name)
+        if os.path.exists(config_path):
+            dest_path = os.path.join(self.path, 'config.json')
+            LOG.info('copy {} to {}'.format(config_path, dest_path))
+            shutil.copyfile(config_path, dest_path)
+
     def create(self):
-        LOG.debug('creating %s', self.zipfile_name)
+        LOG.info('creating function %s', self.name)
+        self._copy_config_file()
         self.zip_lambda_function(self.zipfile_name, self.path)
         with open(self.zipfile_name, 'rb') as fp:
             exec_role = self._context.exec_role_arn
@@ -198,15 +208,26 @@ class Function(object):
                 LOG.exception('Unable to upload zip file')
         self.add_permissions()
 
+    def _do_update(self):
+        do_update = False
+        if self._context.force:
+            do_update = True
+        else:
+            stats = os.stat(self.zipfile_name)
+            if self._context.cache.get('zipfile_size') != stats.st_size:
+                self._context.cache['zipfile_size'] = stats.st_size
+                do_update = True
+        return do_update
+
     def update(self):
-        LOG.debug('updating %s', self.zipfile_name)
-        self.zip_lambda_function(self.zipfile_name, self.path)
-        stats = os.stat(self.zipfile_name)
-        if self._context.cache.get('zipfile_size') != stats.st_size:
-            self._context.cache['zipfile_size'] = stats.st_size
+        LOG.info('updating %s', self.name)
+        self._copy_config_file()
+        if self._do_update():
             self._context.save_cache()
             with open(self.zipfile_name, 'rb') as fp:
                 try:
+                    LOG.info('uploading new function zipfile %s',
+                             self.zipfile_name)
                     zipdata = fp.read()
                     response = self._lambda_client.call(
                         'update_function_code',
@@ -214,9 +235,9 @@ class Function(object):
                         ZipFile=zipdata)
                     LOG.debug(response)
                 except Exception:
-                    LOG.exception('Unable to update zip file')
+                    LOG.exception('unable to update zip file')
         else:
-            LOG.info('Code has not changed')
+            LOG.info('function has not changed')
 
     def deploy(self):
         if self.exists():
@@ -224,7 +245,7 @@ class Function(object):
         return self.create()
 
     def publish_version(self, description):
-        LOG.debug('publishing version of %s', self.name)
+        LOG.info('publishing version of %s', self.name)
         try:
             response = self._lambda_client.call(
                 'publish_version',
@@ -237,7 +258,7 @@ class Function(object):
         return response['Version']
 
     def list_versions(self):
-        LOG.debug('listing versions of %s', self.name)
+        LOG.info('listing versions of %s', self.name)
         try:
             response = self._lambda_client.call(
                 'list_versions_by_function',
@@ -248,7 +269,7 @@ class Function(object):
         return response['Versions']
 
     def create_alias(self, name, description, version=None):
-        LOG.debug('creating alias of %s', self.name)
+        LOG.info('creating alias of %s', self.name)
         if version is None:
             version = self.version
         try:
@@ -263,7 +284,7 @@ class Function(object):
             LOG.exception('Unable to create alias')
 
     def list_aliases(self):
-        LOG.debug('listing aliases of %s', self.name)
+        LOG.info('listing aliases of %s', self.name)
         try:
             response = self._lambda_client.call(
                 'list_aliases',
@@ -279,7 +300,7 @@ class Function(object):
         self.create_alias(name, description, version)
 
     def delete(self):
-        LOG.debug('deleting function %s', self.name)
+        LOG.info('deleting function %s', self.name)
         response = None
         try:
             response = self._lambda_client.call(
@@ -291,7 +312,6 @@ class Function(object):
         return response
 
     def status(self):
-        LOG.debug('getting status for function %s', self.name)
         try:
             response = self._lambda_client.call(
                 'get_function',

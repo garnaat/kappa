@@ -121,10 +121,10 @@ class Policy(object):
             LOG.exception('Error creating new Policy version')
 
     def deploy(self):
-        LOG.debug('deploying policy %s', self.name)
+        LOG.info('deploying policy %s', self.name)
         document = self.document()
         if not document:
-            LOG.debug('not a custom policy, no need to create it')
+            LOG.info('not a custom policy, no need to create it')
             return
         policy = self.exists()
         if policy:
@@ -138,7 +138,7 @@ class Policy(object):
                 self._context.save_cache()
                 self._add_policy_version()
             else:
-                LOG.info('Policy unchanged')
+                LOG.info('policy unchanged')
         else:
             # create a new policy
             try:
@@ -157,7 +157,7 @@ class Policy(object):
         # This indicates that it was a custom policy created by kappa.
         document = self.document()
         if self.arn and document:
-            LOG.debug('deleting policy %s', self.name)
+            LOG.info('deleting policy %s', self.name)
             response = self._iam_client.call(
                 'delete_policy', PolicyArn=self.arn)
             LOG.debug(response)
