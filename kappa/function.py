@@ -222,6 +222,7 @@ class Function(object):
     def update(self):
         LOG.info('updating %s', self.name)
         self._copy_config_file()
+        self.zip_lambda_function(self.zipfile_name, self.path)
         if self._do_update():
             self._context.save_cache()
             with open(self.zipfile_name, 'rb') as fp:
