@@ -45,8 +45,7 @@ class Role(object):
 
     @property
     def name(self):
-        return '{}-{}-role'.format(
-            self._context.name, self._context.environment)
+        return self._context.name
 
     @property
     def arn(self):

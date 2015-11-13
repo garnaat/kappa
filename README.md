@@ -42,8 +42,11 @@ Kappa is a command line tool.  The basic command format is:
 
 Where ``command`` is one of:
 
-* create - creates the IAM policy (if necessary), the IAM role, and zips and
-  uploads the Lambda function code to the Lambda service
+* deploy - does whatever is required to deploy the current version of your
+  Lambda function such as creating/updating policies and roles and creating or
+  updating the function itself
+* delete - delete the Lambda function, remove any event sources, delete the IAM
+  policy and role
 * invoke - make a synchronous call to your Lambda function, passing test data
   and display the resulting log data
 * invoke_async - make an asynchronous call to your Lambda function passing test
@@ -53,9 +56,6 @@ Where ``command`` is one of:
 * tail - display the most recent log events for the function (remember that it
   can take several minutes before log events are available from CloudWatch)
 * add_event_sources - hook up an event source to your Lambda function
-* delete - delete the Lambda function, remove any event sources, delete the IAM
-  policy and role
-* update_code - Upload new code for your Lambda function
 * update_event_sources - Update the event sources based on the information in
   your kappa config file
 * status - display summary information about functions, stacks, and event
@@ -76,9 +76,9 @@ The basic workflow is:
 * Create any custom IAM policy you need to execute your Lambda function
 * Create some sample data
 * Create the YAML config file with all of the information
-* Run ``kappa <path-to-config> create`` to create roles and upload function
-* Run ``kappa <path-to-config> invoke`` to invoke the function with test data
-* Run ``kappa <path-to-config> update_code`` to upload new code for your Lambda
+* Run ``kappa <path-to-config> deploy`` to create roles and upload function
+* Run ``kappa <path-to-config> test`` to invoke the function with test data
+* Run ``kappa <path-to-config> deploy`` to upload new code for your Lambda
   function
 * Run ``kappa <path-to-config> add_event_sources`` to hook your function up to the event source
 * Run ``kappa <path-to-config> tail`` to see more output

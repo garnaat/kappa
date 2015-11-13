@@ -62,7 +62,7 @@ class Function(object):
 
     @property
     def zipfile_name(self):
-        return self._config['zipfile_name']
+        return '{}.zip'.format(self._context.name)
 
     @property
     def path(self):

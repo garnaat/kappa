@@ -66,7 +66,17 @@ class Context(object):
 
     @property
     def name(self):
-        return self.config.get('name', None)
+        return '{}-{}-v{}'.format(self.base_name,
+                                 self.environment,
+                                 self.version)
+
+    @property
+    def base_name(self):
+        return self.config.get('base_name')
+
+    @property
+    def version(self):
+        return self.config.get('version')
 
     @property
     def profile(self):
@@ -78,11 +88,11 @@ class Context(object):
 
     @property
     def record_path(self):
-        return self.config.get('record_path', None)
+        return self.config.get('record_path')
 
     @property
     def lambda_config(self):
-        return self.config.get('lambda', None)
+        return self.config.get('lambda')
 
     @property
     def exec_role_arn(self):

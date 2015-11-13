@@ -35,7 +35,7 @@ class Policy(object):
 
     @property
     def name(self):
-        return '{}-{}-policy'.format(self._context.name, self.environment)
+        return self._context.name
 
     @property
     def description(self):
