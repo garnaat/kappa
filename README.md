@@ -33,6 +33,18 @@ your function on.
 If you need to make changes, kappa will allow you to easily update your Lambda
 function with new code or update your event sources as needed.
 
+Installation
+------------
+
+The quickest way to get kappa is to install the latest stable version via pip:
+
+    pip install kappa
+    
+Or for the development version:
+
+    pip install git+https://github.com/garnaat/kappa.git
+
+
 Getting Started
 ---------------
 
