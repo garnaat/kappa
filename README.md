@@ -11,7 +11,7 @@ deploy, update, and test functions for AWS Lambda.
 There are quite a few steps involved in developing a Lambda function.
 You have to:
 
-* Write the function itself (Javascript only for now)
+* Write the function itself
 * Create the IAM role required by the Lambda function itself (the executing
 role) to allow it access to any resources it needs to do its job
 * Add additional permissions to the Lambda function if it is going to be used
