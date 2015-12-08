@@ -17,6 +17,7 @@ import os
 import zipfile
 import time
 import shutil
+import hashlib
 
 from botocore.exceptions import ClientError
 
@@ -66,11 +67,11 @@ class Function(object):
 
     @property
     def path(self):
-        return self._config['path']
+        return self._config.get('path', '_src')
 
     @property
-    def test_data(self):
-        return self._config['test_data']
+    def tests(self):
+        return self._config.get('tests', '_tests')
 
     @property
     def permissions(self):
@@ -87,33 +88,78 @@ class Function(object):
                 LOG.debug('Unable to find ARN for function: %s', self.name)
         return self._response
 
+    def _get_response_configuration(self, key, default=None):
+        value = None
+        response = self._get_response()
+        if response:
+            if 'Configuration' in response:
+                value = response['Configuration'].get(key, default)
+        return value
+
+    def _get_response_code(self, key, default=None):
+        value = None
+        response = self._get_response
+        if response:
+            if 'Configuration' in response:
+                value = response['Configuration'].get(key, default)
+        return value
+
     @property
     def code_sha_256(self):
-        response = self._get_response()
-        return response['Configuration']['CodeSha256']
+        return self._get_response_configuration('CodeSha256')
 
     @property
     def arn(self):
-        response = self._get_response()
-        return response['Configuration']['FunctionArn']
-
-    @property
-    def version(self):
-        response = self._get_response()
-        return response['Configuration']['Version']
+        return self._get_response_configuration('FunctionArn')
 
     @property
     def repository_type(self):
-        response = self._get_response()
-        return response['Code']['RepositoryType']
+        return self._get_response_code('RepositoryType')
 
     @property
     def location(self):
-        response = self._get_response()
-        return response['Code']['Location']
+        return self._get_response_code('Location')
+
+    @property
+    def version(self):
+        return self._get_response_configuration('Version')
 
     def exists(self):
         return self._get_response()
+
+    def _check_function_md5(self):
+        changed = True
+        self._copy_config_file()
+        self.zip_lambda_function(self.zipfile_name, self.path)
+        m = hashlib.md5()
+        with open(self.zipfile_name, 'rb') as fp:
+            m.update(fp.read())
+        zip_md5 = m.hexdigest()
+        cached_md5 = self._context.get_cache_value('zip_md5')
+        LOG.debug('zip_md5: %s', zip_md5)
+        LOG.debug('cached md5: %s', cached_md5)
+        if zip_md5 != cached_md5:
+            self._context.set_cache_value('zip_md5', zip_md5)
+        else:
+            changed = False
+            LOG.info('function unchanged')
+        return changed
+
+    def _check_config_md5(self):
+        m = hashlib.md5()
+        m.update(self.description)
+        m.update(self.handler)
+        m.update(str(self.memory_size))
+        m.update(self._context.exec_role_arn)
+        m.update(str(self.timeout))
+        config_md5 = m.hexdigest()
+        cached_md5 = self._context.get_cache_value('config_md5')
+        if config_md5 != cached_md5:
+            self._context.set_cache_value('config_md5', config_md5)
+            changed = True
+        else:
+            changed = False
+        return changed
 
     @property
     def log(self):
@@ -181,13 +227,13 @@ class Function(object):
         config_path = os.path.join(self.path, config_name)
         if os.path.exists(config_path):
             dest_path = os.path.join(self.path, 'config.json')
-            LOG.info('copy %s to %s', config_path, dest_path)
-            shutil.copyfile(config_path, dest_path)
+            LOG.debug('copy %s to %s', config_path, dest_path)
+            shutil.copy2(config_path, dest_path)
 
     def create(self):
         LOG.info('creating function %s', self.name)
-        self._copy_config_file()
-        self.zip_lambda_function(self.zipfile_name, self.path)
+        self._check_function_md5()
+        self._check_config_md5()
         with open(self.zipfile_name, 'rb') as fp:
             exec_role = self._context.exec_role_arn
             LOG.debug('exec_role=%s', exec_role)
@@ -202,29 +248,17 @@ class Function(object):
                     Handler=self.handler,
                     Description=self.description,
                     Timeout=self.timeout,
-                    MemorySize=self.memory_size)
+                    MemorySize=self.memory_size,
+                    Publish=True)
                 LOG.debug(response)
             except Exception:
                 LOG.exception('Unable to upload zip file')
         self.add_permissions()
 
-    def _do_update(self):
-        do_update = False
-        if self._context.force:
-            do_update = True
-        else:
-            stats = os.stat(self.zipfile_name)
-            if self._context.cache.get('zipfile_size') != stats.st_size:
-                self._context.cache['zipfile_size'] = stats.st_size
-                do_update = True
-        return do_update
-
     def update(self):
         LOG.info('updating %s', self.name)
-        self._copy_config_file()
-        self.zip_lambda_function(self.zipfile_name, self.path)
-        if self._do_update():
-            self._context.save_cache()
+        if self._check_function_md5():
+            self._response = None
             with open(self.zipfile_name, 'rb') as fp:
                 try:
                     LOG.info('uploading new function zipfile %s',
@@ -233,33 +267,40 @@ class Function(object):
                     response = self._lambda_client.call(
                         'update_function_code',
                         FunctionName=self.name,
-                        ZipFile=zipdata)
+                        ZipFile=zipdata,
+                        Publish=True)
                     LOG.debug(response)
                 except Exception:
                     LOG.exception('unable to update zip file')
+
+    def update_configuration(self):
+        if self._check_config_md5():
+            self._response = None
+            LOG.info('updating configuration for %s', self.name)
+            exec_role = self._context.exec_role_arn
+            LOG.debug('exec_role=%s', exec_role)
+            try:
+                response = self._lambda_client.call(
+                    'update_function_configuration',
+                    FunctionName=self.name,
+                    Role=exec_role,
+                    Handler=self.handler,
+                    Description=self.description,
+                    Timeout=self.timeout,
+                    MemorySize=self.memory_size)
+                LOG.debug(response)
+            except Exception:
+                LOG.exception('unable to update function configuration')
         else:
-            LOG.info('function has not changed')
+            LOG.info('function configuration has not changed')
 
     def deploy(self):
         if self.exists():
+            self.update_configuration()
             return self.update()
         return self.create()
 
-    def publish_version(self, description):
-        LOG.info('publishing version of %s', self.name)
-        try:
-            response = self._lambda_client.call(
-                'publish_version',
-                FunctionName=self.name,
-                CodeSha256=self.code_sha_256,
-                Description=description)
-            LOG.debug(response)
-        except Exception:
-            LOG.exception('Unable to publish version')
-        return response['Version']
-
     def list_versions(self):
-        LOG.info('listing versions of %s', self.name)
         try:
             response = self._lambda_client.call(
                 'list_versions_by_function',
@@ -270,15 +311,26 @@ class Function(object):
         return response['Versions']
 
     def create_alias(self, name, description, version=None):
-        LOG.info('creating alias of %s', self.name)
-        if version is None:
-            version = self.version
+        # Find the current (latest) version by version number
+        # First find the SHA256 of $LATEST
+        if not version:
+            versions = self.list_versions()
+            for version in versions:
+                if version['Version'] == '$LATEST':
+                    latest_sha256 = version['CodeSha256']
+                    break
+            for version in versions:
+                if version['Version'] != '$LATEST':
+                    if version['CodeSha256'] == latest_sha256:
+                        version = version['Version']
+                        break
         try:
+            LOG.info('creating alias %s=%s', name, version)
             response = self._lambda_client.call(
                 'create_alias',
                 FunctionName=self.name,
                 Description=description,
-                FunctionVersion=self.version,
+                FunctionVersion=version,
                 Name=name)
             LOG.debug(response)
         except Exception:
@@ -297,8 +349,7 @@ class Function(object):
         return response['Versions']
 
     def tag(self, name, description):
-        version = self.publish_version(description)
-        self.create_alias(name, description, version)
+        self.create_alias(name, description)
 
     def delete(self):
         LOG.info('deleting function %s', self.name)
@@ -332,17 +383,14 @@ class Function(object):
                 InvokeArgs=fp)
             LOG.debug(response)
 
-    def _invoke(self, test_data, invocation_type):
-        if test_data is None:
-            test_data = self.test_data
-        LOG.debug('invoke %s', test_data)
-        with open(test_data) as fp:
-            response = self._lambda_client.call(
-                'invoke',
-                FunctionName=self.name,
-                InvocationType=invocation_type,
-                LogType='Tail',
-                Payload=fp.read())
+    def _invoke(self, data, invocation_type):
+        LOG.debug('invoke %s as %s', self.name, invocation_type)
+        response = self._lambda_client.call(
+            'invoke',
+            FunctionName=self.name,
+            InvocationType=invocation_type,
+            LogType='Tail',
+            Payload=data)
         LOG.debug(response)
         return response
 

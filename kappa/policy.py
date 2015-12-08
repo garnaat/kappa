@@ -131,11 +131,11 @@ class Policy(object):
             m = hashlib.md5()
             m.update(document)
             policy_md5 = m.hexdigest()
+            cached_md5 = self._context.get_cache_value('policy_md5')
             LOG.debug('policy_md5: %s', policy_md5)
-            LOG.debug('cache md5: %s', self._context.cache.get('policy_md5'))
-            if policy_md5 != self._context.cache.get('policy_md5'):
-                self._context.cache['policy_md5'] = policy_md5
-                self._context.save_cache()
+            LOG.debug('cached md5: %s', cached_md5)
+            if policy_md5 != cached_md5:
+                self._context.set_cache_value('policy_md5', policy_md5)
                 self._add_policy_version()
             else:
                 LOG.info('policy unchanged')
@@ -158,6 +158,20 @@ class Policy(object):
         document = self.document()
         if self.arn and document:
             LOG.info('deleting policy %s', self.name)
+            LOG.info('deleting all policy versions for %s', self.name)
+            versions = self._list_versions()
+            for version in versions:
+                LOG.debug('deleting version %s', version['VersionId'])
+                if not version['IsDefaultVersion']:
+                    try:
+                        response = self._iam_client.call(
+                            'delete_policy_version',
+                            PolicyArn=self.arn,
+                            VersionId=version['VersionId'])
+                    except Exception:
+                        LOG.exception('Unable to delete policy version %s',
+                                      version['VersionId'])
+            LOG.debug('now delete policy')
             response = self._iam_client.call(
                 'delete_policy', PolicyArn=self.arn)
             LOG.debug(response)

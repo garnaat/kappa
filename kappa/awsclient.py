@@ -13,33 +13,22 @@
 # limitations under the License.
 
 import logging
-import json
 import os
 
-import datetime
 import jmespath
 import boto3
+import placebo
 
 
 LOG = logging.getLogger(__name__)
 
 
-def json_encoder(obj):
-    """JSON encoder that formats datetimes as ISO8601 format."""
-    if isinstance(obj, datetime.datetime):
-        return obj.isoformat()
-    else:
-        return obj
-
-
 class AWSClient(object):
 
-    def __init__(self, service_name, region_name, profile_name,
-                 record_path=None):
+    def __init__(self, service_name, region_name, profile_name):
         self._service_name = service_name
         self._region_name = region_name
         self._profile_name = profile_name
-        self._record_path = record_path
         self._client = self._create_client()
 
     @property
@@ -54,43 +43,12 @@ class AWSClient(object):
     def profile_name(self):
         return self._profile_name
 
-    def _record(self, op_name, kwargs, data):
-        """
-        This is a little hack to enable easier unit testing of the code.
-        Since botocore/boto3 has its own set of tests, I'm not interested in
-        trying to test it again here.  So, this recording capability allows
-        us to save the data coming back from botocore as JSON files which
-        can then be used by the mocked awsclient in the unit test directory.
-        To enable this, pass in a record_path to the contructor and the JSON
-        data files will get stored in this path.
-        """
-        if self._record_path:
-            path = os.path.expanduser(self._record_path)
-            path = os.path.expandvars(path)
-            path = os.path.join(path, self.service_name)
-            if not os.path.isdir(path):
-                os.mkdir(path)
-            path = os.path.join(path, self.region_name)
-            if not os.path.isdir(path):
-                os.mkdir(path)
-            path = os.path.join(path, self.account_id)
-            if not os.path.isdir(path):
-                os.mkdir(path)
-            filename = op_name
-            if kwargs:
-                for k, v in kwargs.items():
-                    if k != 'query':
-                        filename += '_{}_{}'.format(k, v)
-            filename += '.json'
-            path = os.path.join(path, filename)
-            with open(path, 'wb') as fp:
-                json.dump(data, fp, indent=4, default=json_encoder,
-                          ensure_ascii=False)
-
     def _create_client(self):
         session = boto3.session.Session(
             region_name=self._region_name, profile_name=self._profile_name)
-        return session.client(self._service_name)
+        placebo.attach(session)
+        client = session.client(self._service_name)
+        return client
 
     def call(self, op_name, query=None, **kwargs):
         """
@@ -131,11 +89,17 @@ class AWSClient(object):
             data = op(**kwargs)
         if query:
             data = query.search(data)
-        self._record(op_name, kwargs, data)
         return data
 
 
 _client_cache = {}
+
+
+def save_recordings(recording_path):
+    for key in _client_cache:
+        client = _client_cache[key]
+        full_path = os.path.join(recording_path, '{}.json'.format(key))
+        client._client.meta.placebo.save(full_path)
 
 
 def create_client(service_name, context):
@@ -143,8 +107,18 @@ def create_client(service_name, context):
     client_key = '{}:{}:{}'.format(service_name, context.region,
                                    context.profile)
     if client_key not in _client_cache:
-        _client_cache[client_key] = AWSClient(service_name,
-                                              context.region,
-                                              context.profile,
-                                              context.record_path)
+        client = AWSClient(service_name, context.region,
+                           context.profile)
+        if 'placebo' in context.config:
+            placebo_cfg = context.config['placebo']
+            if placebo_cfg.get('mode') == 'play':
+                full_path = os.path.join(
+                    placebo_cfg['recording_path'],
+                    '{}.json'.format(client_key))
+                if os.path.exists(full_path):
+                    client._client.meta.placebo.load(full_path)
+                client._client.meta.placebo.start()
+            elif placebo_cfg['mode'] == 'record':
+                client._client.meta.placebo.record()
+        _client_cache[client_key] = client
     return _client_cache[client_key]

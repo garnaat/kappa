@@ -1,0 +1,7 @@
+{
+    "http_method": "POST",
+    "json_body": {
+        "foo": "This is the foo value",
+        "bar": "This is the bar value"
+    }
+}

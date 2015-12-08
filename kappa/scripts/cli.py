@@ -19,12 +19,16 @@ import click
 
 from kappa.context import Context
 
+pass_ctx = click.make_pass_decorator(Context)
+
 
 @click.group()
-@click.argument(
-    'config',
+@click.option(
+    '--config',
+    default='kappa.yml',
     type=click.File('rb'),
     envvar='KAPPA_CONFIG',
+    help='Name of config file (default is kappa.yml)'
 )
 @click.option(
     '--debug/--no-debug',
@@ -32,117 +36,63 @@ from kappa.context import Context
     help='Turn on debugging output'
 )
 @click.option(
-    '--environment',
-    help='Specify which environment to work with'
-)
-@click.option(
-    '--force/--no-force',
-    default=False,
-    help='Force an update of the Lambda function'
+    '--env',
+    default='dev',
+    help='Specify which environment to work with (default dev)'
 )
 @click.pass_context
-def cli(ctx, config=None, debug=False, environment=None, force=None):
-    config = config
-    ctx.obj['debug'] = debug
-    ctx.obj['config'] = config
-    ctx.obj['environment'] = environment
-    ctx.obj['force'] = force
+def cli(ctx, config=None, debug=False, env=None):
+    ctx.obj = Context(config, env, debug)
 
 
 @cli.command()
-@click.pass_context
+@pass_ctx
 def deploy(ctx):
     """Deploy the Lambda function and any policies and roles required"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
     click.echo('deploying')
-    context.deploy()
+    ctx.deploy()
     click.echo('done')
 
 
 @cli.command()
-@click.pass_context
-def tag(ctx):
-    """Deploy the Lambda function and any policies and roles required"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
-    click.echo('tagging')
-    context.deploy()
-    click.echo('done')
-
-
-@cli.command()
-@click.pass_context
-def invoke(ctx):
+@click.argument('data_file', type=click.File('r'))
+@pass_ctx
+def invoke(ctx, data_file):
     """Invoke the command synchronously"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
     click.echo('invoking')
-    response = context.invoke()
+    response = ctx.invoke(data_file.read())
     log_data = base64.b64decode(response['LogResult'])
     click.echo(log_data)
+    click.echo('Response:')
     click.echo(response['Payload'].read())
     click.echo('done')
 
 
 @cli.command()
-@click.pass_context
+@pass_ctx
 def test(ctx):
     """Test the command synchronously"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
     click.echo('testing')
-    response = context.test()
-    log_data = base64.b64decode(response['LogResult'])
-    click.echo(log_data)
-    click.echo(response['Payload'].read())
+    ctx.test()
     click.echo('done')
 
 
 @cli.command()
-@click.pass_context
-def dryrun(ctx):
-    """Show you what would happen but don't actually do anything"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
-    click.echo('invoking dryrun')
-    response = context.dryrun()
-    click.echo(response)
-    click.echo('done')
-
-
-@cli.command()
-@click.pass_context
-def invoke_async(ctx):
-    """Invoke the Lambda function asynchronously"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
-    click.echo('invoking async')
-    response = context.invoke_async()
-    click.echo(response)
-    click.echo('done')
-
-
-@cli.command()
-@click.pass_context
+@pass_ctx
 def tail(ctx):
     """Show the last 10 lines of the log file"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
     click.echo('tailing logs')
-    for e in context.tail()[-10:]:
+    for e in ctx.tail()[-10:]:
         ts = datetime.utcfromtimestamp(e['timestamp']//1000).isoformat()
         click.echo("{}: {}".format(ts, e['message']))
     click.echo('done')
 
 
 @cli.command()
-@click.pass_context
+@pass_ctx
 def status(ctx):
     """Print a status of this Lambda function"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'])
-    status = context.status()
+    status = ctx.status()
     click.echo(click.style('Policy', bold=True))
     if status['policy']:
         line = '    {} ({})'.format(
@@ -175,58 +125,46 @@ def status(ctx):
 
 
 @cli.command()
-@click.pass_context
+@pass_ctx
 def delete(ctx):
     """Delete the Lambda function and related policies and roles"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
     click.echo('deleting')
-    context.delete()
+    ctx.delete()
     click.echo('done')
 
 
 @cli.command()
-@click.pass_context
-def add_event_sources(ctx):
+@click.option(
+    '--command',
+    type=click.Choice(['add', 'update', 'enable', 'disable']),
+    help='Operation to perform on event sources')
+@pass_ctx
+def event_sources(ctx, command):
     """Add any event sources specified in the config file"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
-    click.echo('adding event sources')
-    context.add_event_sources()
-    click.echo('done')
+    if command == 'add':
+        click.echo('adding event sources')
+        ctx.add_event_sources()
+        click.echo('done')
+    elif command == 'update':
+        click.echo('updating event sources')
+        ctx.update_event_sources()
+        click.echo('done')
+    elif command == 'enable':
+        click.echo('enabling event sources')
+        ctx.enable_event_sources()
+        click.echo('done')
+    elif command == 'disable':
+        click.echo('enabling event sources')
+        ctx.disable_event_sources()
+        click.echo('done')
 
 
 @cli.command()
-@click.pass_context
-def update_event_sources(ctx):
-    """Update event sources specified in the config file"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
-    click.echo('updating event sources')
-    context.update_event_sources()
+@click.argument('name')
+@click.argument('description')
+@pass_ctx
+def tag(ctx, name, description):
+    """Tag the current function version with a symbolic name"""
+    click.echo('creating tag for function')
+    ctx.tag(name, description)
     click.echo('done')
-
-
-@cli.command()
-@click.pass_context
-def enable_event_sources(ctx):
-    """Enable event sources specified in the config file"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
-    click.echo('enabling event sources')
-    context.enable_event_sources()
-    click.echo('done')
-
-
-@cli.command()
-@click.pass_context
-def disable_event_sources(ctx):
-    """Disable event sources specified in the config file"""
-    context = Context(ctx.obj['config'], ctx.obj['environment'],
-                      ctx.obj['debug'], ctx.obj['force'])
-    click.echo('enabling event sources')
-    context.disable_event_sources()
-    click.echo('done')
-
-
-cli(obj={})

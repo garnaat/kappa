@@ -1,0 +1,2 @@
+git+ssh://git@github.com/garnaat/petard.git
+

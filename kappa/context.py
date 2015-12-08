@@ -16,6 +16,7 @@ import logging
 import yaml
 import time
 import os
+import shutil
 
 import kappa.function
 import kappa.event_source
@@ -57,26 +58,28 @@ class Context(object):
                 with open(cache_file, 'rb') as fp:
                     self.cache = yaml.load(fp)
 
-    def save_cache(self):
+    def _delete_cache(self):
+        if os.path.isdir('.kappa'):
+            shutil.rmtree('.kappa')
+            self.cache = {}
+
+    def _save_cache(self):
         if not os.path.isdir('.kappa'):
             os.mkdir('.kappa')
         cache_file = os.path.join('.kappa', 'cache')
         with open(cache_file, 'wb') as fp:
             yaml.dump(self.cache, fp)
 
+    def get_cache_value(self, key):
+        return self.cache.setdefault(self.environment, dict()).get(key)
+
+    def set_cache_value(self, key, value):
+        self.cache.setdefault(self.environment, dict())[key] = value
+        self._save_cache()
+
     @property
     def name(self):
-        return '{}-{}-v{}'.format(self.base_name,
-                                 self.environment,
-                                 self.version)
-
-    @property
-    def base_name(self):
-        return self.config.get('base_name')
-
-    @property
-    def version(self):
-        return self.config.get('version')
+        return '{}-{}'.format(self.config['name'], self.environment)
 
     @property
     def profile(self):
@@ -87,12 +90,21 @@ class Context(object):
         return self.config['environments'][self.environment]['region']
 
     @property
-    def record_path(self):
-        return self.config.get('record_path')
+    def record(self):
+        return self.config.get('record', False)
 
     @property
     def lambda_config(self):
         return self.config.get('lambda')
+
+    @property
+    def test_dir(self):
+        return self.config.get('tests', '_tests')
+
+    @property
+    def unit_test_runner(self):
+        return self.config.get('unit_test_runner',
+                               'nosetests . ../_tests/unit/')
 
     @property
     def exec_role_arn(self):
@@ -179,14 +191,20 @@ class Context(object):
         time.sleep(5)
         self.function.deploy()
 
-    def update_code(self):
-        self.function.update()
+    def invoke(self, data):
+        return self.function.invoke(data)
 
-    def invoke(self):
-        return self.function.invoke()
+    def unit_tests(self):
+        # run any unit tests
+        unit_test_path = os.path.join(self.test_dir, 'unit')
+        if os.path.exists(unit_test_path):
+            os.chdir(self.function.path)
+            print('running unit tests')
+            pipe = os.popen(self.unit_test_runner, 'r')
+            print(pipe.read())
 
     def test(self):
-        return self.function.invoke()
+        return self.unit_tests()
 
     def dryrun(self):
         return self.function.dryrun()
@@ -196,6 +214,9 @@ class Context(object):
 
     def tail(self):
         return self.function.tail()
+
+    def tag(self, name, description):
+        return self.function.tag(name, description)
 
     def delete(self):
         for event_source in self.event_sources:
@@ -208,6 +229,7 @@ class Context(object):
         time.sleep(5)
         if self.policy:
             self.policy.delete()
+        self._delete_cache()
 
     def status(self):
         status = {}

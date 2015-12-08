@@ -1,0 +1,32 @@
+---
+name: kappa-python-sample
+environments:
+  dev:
+    profile: <your dev profile>
+    region: <your dev region e.g. us-west-2>
+    policy:
+      resources:
+        - arn: arn:aws:dynamodb:us-west-2:123456789012:table/kappa-python-sample
+
+          actions:
+          - "*"
+        - arn: arn:aws:logs:*:*:*
+          actions:
+          - "*"
+  prod:
+    profile: <your prod profile>
+    region: <your prod region e.g. us-west-2>
+    policy_resources:
+      - arn: arn:aws:dynamodb:us-west-2:234567890123:table/kappa-python-sample
+        actions:
+        - "*"
+      - arn: arn:aws:logs:*:*:*
+        actions:
+        - "*"
+lambda:
+  description: A simple Python sample
+  handler: simple.handler
+  runtime: python2.7
+  memory_size: 256
+  timeout: 3
+  
