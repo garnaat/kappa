@@ -1,0 +1,26 @@
+---
+name: kappa-simple
+environments:
+  dev:
+    profile: <your profile here>
+    region: <your region here>
+    policy:
+      resources:
+        - arn: arn:aws:logs:*:*:*
+          actions:
+          - "*"
+  prod:
+    profile: <your profile here>
+    region: <your region here>
+    policy:
+      resources:
+        - arn: arn:aws:logs:*:*:*
+          actions:
+          - "*"
+lambda:    
+  description: A very simple Kappa example
+  handler: simple.handler
+  runtime: python2.7
+  memory_size: 128
+  timeout: 3
+  

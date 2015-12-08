@@ -154,6 +154,8 @@ class Function(object):
         m.update(str(self.timeout))
         config_md5 = m.hexdigest()
         cached_md5 = self._context.get_cache_value('config_md5')
+        LOG.debug('config_md5: %s', config_md5)
+        LOG.debug('cached_md5: %s', cached_md5)
         if config_md5 != cached_md5:
             self._context.set_cache_value('config_md5', config_md5)
             changed = True
