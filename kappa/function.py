@@ -315,14 +315,14 @@ class Function(object):
         # First find the SHA256 of $LATEST
         if not version:
             versions = self.list_versions()
-            for version in versions:
-                if version['Version'] == '$LATEST':
-                    latest_sha256 = version['CodeSha256']
+            for v in versions:
+                if v['Version'] == '$LATEST':
+                    latest_sha256 = v['CodeSha256']
                     break
-            for version in versions:
-                if version['Version'] != '$LATEST':
-                    if version['CodeSha256'] == latest_sha256:
-                        version = version['Version']
+            for v in versions:
+                if v['Version'] != '$LATEST':
+                    if v['CodeSha256'] == latest_sha256:
+                        version = v['Version']
                         break
         try:
             LOG.info('creating alias %s=%s', name, version)

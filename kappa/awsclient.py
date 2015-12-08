@@ -29,7 +29,7 @@ class AWSClient(object):
         self._service_name = service_name
         self._region_name = region_name
         self._profile_name = profile_name
-        self._client = self._create_client()
+        self.client = self._create_client()
 
     @property
     def service_name(self):
@@ -80,12 +80,12 @@ class AWSClient(object):
         LOG.debug(kwargs)
         if query:
             query = jmespath.compile(query)
-        if self._client.can_paginate(op_name):
-            paginator = self._client.get_paginator(op_name)
+        if self.client.can_paginate(op_name):
+            paginator = self.client.get_paginator(op_name)
             results = paginator.paginate(**kwargs)
             data = results.build_full_result()
         else:
-            op = getattr(self._client, op_name)
+            op = getattr(self.client, op_name)
             data = op(**kwargs)
         if query:
             data = query.search(data)
@@ -99,7 +99,7 @@ def save_recordings(recording_path):
     for key in _client_cache:
         client = _client_cache[key]
         full_path = os.path.join(recording_path, '{}.json'.format(key))
-        client._client.meta.placebo.save(full_path)
+        client.client.meta.placebo.save(full_path)
 
 
 def create_client(service_name, context):
@@ -116,9 +116,9 @@ def create_client(service_name, context):
                     placebo_cfg['recording_path'],
                     '{}.json'.format(client_key))
                 if os.path.exists(full_path):
-                    client._client.meta.placebo.load(full_path)
-                client._client.meta.placebo.start()
+                    client.client.meta.placebo.load(full_path)
+                client.client.meta.placebo.start()
             elif placebo_cfg['mode'] == 'record':
-                client._client.meta.placebo.record()
+                client.client.meta.placebo.record()
         _client_cache[client_key] = client
     return _client_cache[client_key]
