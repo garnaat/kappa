@@ -6,6 +6,7 @@ import os
 
 requires = [
     'boto3>=1.2.2',
+    'placebo>=0.3.0',
     'click>=5.0',
     'PyYAML>=3.11'
 ]
