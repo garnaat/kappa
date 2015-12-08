@@ -22,12 +22,12 @@ in a Push model (e.g. S3, SNS) rather than a Pull model.
 * Add an event source to the function
 * View the output of the live function
 
-Kappa tries to help you with some of this.  It allows you to create an IAM
-managed policy or use an existing one.  It creates the IAM execution role for
-you and associates the policy with it.  Kappa will zip up the function and
-any dependencies and upload them to AWS Lambda.  It also sends test data
-to the uploaded function and finds the related CloudWatch log stream and
-displays the log events.  Finally, it will add the event source to turn
+Kappa tries to help you with some of this.  It creates all IAM policies for you
+based on the resources you have told it you need to access.  It creates the IAM
+execution role for you and associates the policy with it.  Kappa will zip up
+the function and any dependencies and upload them to AWS Lambda.  It also sends
+test data to the uploaded function and finds the related CloudWatch log stream
+and displays the log events.  Finally, it will add the event source to turn
 your function on.
 
 If you need to make changes, kappa will allow you to easily update your Lambda
@@ -193,6 +193,14 @@ the CloudWatch logs for the call and we can see the logging call in the Python
 function that prints out the ``event`` (the data) passed to the function.  And
 finally, we can see the Response from the function which, for now, is just a
 hard-coded data structure returned by the function.
+
+Need to make a change in your function, your list of resources, or your
+function configuration?  Just go ahead and make the change and then re-run the
+``deploy`` command:
+
+    $ kappa deploy
+
+Kappa will figure out what has changed and make the necessary updates for you.
 
 That gives you a quick overview of kappa.  To learn more about it, I recommend
 you check out the tutorial.
