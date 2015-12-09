@@ -157,14 +157,3 @@ def event_sources(ctx, command):
         click.echo('enabling event sources')
         ctx.disable_event_sources()
         click.echo('done')
-
-
-@cli.command()
-@click.argument('name')
-@click.argument('description')
-@pass_ctx
-def tag(ctx, name, description):
-    """Tag the current function version with a symbolic name"""
-    click.echo('creating tag for function')
-    ctx.tag(name, description)
-    click.echo('done')

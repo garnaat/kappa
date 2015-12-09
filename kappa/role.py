@@ -73,7 +73,7 @@ class Role(object):
         return None
 
     def create(self):
-        LOG.debug('creating role %s', self.name)
+        LOG.info('creating role %s', self.name)
         role = self.exists()
         if not role:
             try:
@@ -91,6 +91,8 @@ class Role(object):
                     LOG.debug(response)
             except ClientError:
                 LOG.exception('Error creating Role')
+        else:
+            LOG.info('role already exists')
 
     def delete(self):
         response = None

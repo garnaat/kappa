@@ -77,6 +77,33 @@ class Function(object):
     def permissions(self):
         return self._config.get('permissions', list())
 
+    @property
+    def log(self):
+        if self._log is None:
+            log_group_name = '/aws/lambda/%s' % self.name
+            self._log = kappa.log.Log(self._context, log_group_name)
+        return self._log
+
+    @property
+    def code_sha_256(self):
+        return self._get_response_configuration('CodeSha256')
+
+    @property
+    def arn(self):
+        return self._get_response_configuration('FunctionArn')
+
+    @property
+    def repository_type(self):
+        return self._get_response_code('RepositoryType')
+
+    @property
+    def location(self):
+        return self._get_response_code('Location')
+
+    @property
+    def version(self):
+        return self._get_response_configuration('Version')
+
     def _get_response(self):
         if self._response is None:
             try:
@@ -104,30 +131,10 @@ class Function(object):
                 value = response['Configuration'].get(key, default)
         return value
 
-    @property
-    def code_sha_256(self):
-        return self._get_response_configuration('CodeSha256')
-
-    @property
-    def arn(self):
-        return self._get_response_configuration('FunctionArn')
-
-    @property
-    def repository_type(self):
-        return self._get_response_code('RepositoryType')
-
-    @property
-    def location(self):
-        return self._get_response_code('Location')
-
-    @property
-    def version(self):
-        return self._get_response_configuration('Version')
-
-    def exists(self):
-        return self._get_response()
-
     def _check_function_md5(self):
+        # Zip up the source code and then compute the MD5 of that.
+        # If the MD5 does not match the cached MD5, the function has
+        # changed and needs to be updated so return True.
         changed = True
         self._copy_config_file()
         self.zip_lambda_function(self.zipfile_name, self.path)
@@ -146,6 +153,9 @@ class Function(object):
         return changed
 
     def _check_config_md5(self):
+        # Compute the MD5 of all of the components of the configuration.
+        # If the MD5 does not match the cached MD5, the configuration has
+        # changed and needs to be updated so return True.
         m = hashlib.md5()
         m.update(self.description)
         m.update(self.handler)
@@ -163,16 +173,13 @@ class Function(object):
             changed = False
         return changed
 
-    @property
-    def log(self):
-        if self._log is None:
-            log_group_name = '/aws/lambda/%s' % self.name
-            self._log = kappa.log.Log(self._context, log_group_name)
-        return self._log
-
-    def tail(self):
-        LOG.info('tailing function: %s', self.name)
-        return self.log.tail()
+    def _copy_config_file(self):
+        config_name = '{}_config.json'.format(self._context.environment)
+        config_path = os.path.join(self.path, config_name)
+        if os.path.exists(config_path):
+            dest_path = os.path.join(self.path, 'config.json')
+            LOG.debug('copy %s to %s', config_path, dest_path)
+            shutil.copy2(config_path, dest_path)
 
     def _zip_lambda_dir(self, zipfile_name, lambda_dir):
         LOG.debug('_zip_lambda_dir: lambda_dir=%s', lambda_dir)
@@ -202,6 +209,51 @@ class Function(object):
         else:
             self._zip_lambda_file(zipfile_name, lambda_fn)
 
+    def exists(self):
+        return self._get_response()
+
+    def tail(self):
+        LOG.info('tailing function: %s', self.name)
+        return self.log.tail()
+
+    def list_aliases(self):
+        LOG.info('listing aliases of %s', self.name)
+        try:
+            response = self._lambda_client.call(
+                'list_aliases',
+                FunctionName=self.name,
+                FunctionVersion=self.version)
+            LOG.debug(response)
+        except Exception:
+            LOG.exception('Unable to list aliases')
+        return response['Versions']
+
+    def create_alias(self, name, description, version=None):
+        # Find the current (latest) version by version number
+        # First find the SHA256 of $LATEST
+        if not version:
+            versions = self.list_versions()
+            for v in versions:
+                if v['Version'] == '$LATEST':
+                    latest_sha256 = v['CodeSha256']
+                    break
+            for v in versions:
+                if v['Version'] != '$LATEST':
+                    if v['CodeSha256'] == latest_sha256:
+                        version = v['Version']
+                        break
+        try:
+            LOG.debug('creating alias %s=%s', name, version)
+            response = self._lambda_client.call(
+                'create_alias',
+                FunctionName=self.name,
+                Description=description,
+                FunctionVersion=version,
+                Name=name)
+            LOG.debug(response)
+        except Exception:
+            LOG.exception('Unable to create alias')
+
     def add_permissions(self):
         if self.permissions:
             time.sleep(5)
@@ -224,41 +276,46 @@ class Function(object):
             except Exception:
                 LOG.exception('Unable to add permission')
 
-    def _copy_config_file(self):
-        config_name = '{}_config.json'.format(self._context.environment)
-        config_path = os.path.join(self.path, config_name)
-        if os.path.exists(config_path):
-            dest_path = os.path.join(self.path, 'config.json')
-            LOG.debug('copy %s to %s', config_path, dest_path)
-            shutil.copy2(config_path, dest_path)
-
     def create(self):
         LOG.info('creating function %s', self.name)
         self._check_function_md5()
         self._check_config_md5()
-        with open(self.zipfile_name, 'rb') as fp:
-            exec_role = self._context.exec_role_arn
-            LOG.debug('exec_role=%s', exec_role)
-            try:
-                zipdata = fp.read()
-                response = self._lambda_client.call(
-                    'create_function',
-                    FunctionName=self.name,
-                    Code={'ZipFile': zipdata},
-                    Runtime=self.runtime,
-                    Role=exec_role,
-                    Handler=self.handler,
-                    Description=self.description,
-                    Timeout=self.timeout,
-                    MemorySize=self.memory_size,
-                    Publish=True)
-                LOG.debug(response)
-            except Exception:
-                LOG.exception('Unable to upload zip file')
+        # There is a consistency problem here.
+        # Sometimes the role is not ready to be used by the function.
+        ready = False
+        while not ready:
+            with open(self.zipfile_name, 'rb') as fp:
+                exec_role = self._context.exec_role_arn
+                LOG.debug('exec_role=%s', exec_role)
+                try:
+                    zipdata = fp.read()
+                    response = self._lambda_client.call(
+                        'create_function',
+                        FunctionName=self.name,
+                        Code={'ZipFile': zipdata},
+                        Runtime=self.runtime,
+                        Role=exec_role,
+                        Handler=self.handler,
+                        Description=self.description,
+                        Timeout=self.timeout,
+                        MemorySize=self.memory_size,
+                        Publish=True)
+                    LOG.debug(response)
+                    description = 'For stage {}'.format(
+                        self._context.environment)
+                    self.create_alias(self._context.environment, description)
+                    ready = True
+                except ClientError, e:
+                    if 'InvalidParameterValueException' in str(e):
+                        LOG.debug('Role is not ready, waiting')
+                        time.sleep(2)
+                except Exception:
+                    LOG.exception('Unable to upload zip file')
+                    ready = True
         self.add_permissions()
 
     def update(self):
-        LOG.info('updating %s', self.name)
+        LOG.info('updating function %s', self.name)
         if self._check_function_md5():
             self._response = None
             with open(self.zipfile_name, 'rb') as fp:
@@ -272,6 +329,9 @@ class Function(object):
                         ZipFile=zipdata,
                         Publish=True)
                     LOG.debug(response)
+                    self.create_alias(
+                        self._context.environment,
+                        'For the {} stage'.format(self._context.environment))
                 except Exception:
                     LOG.exception('unable to update zip file')
 
@@ -310,44 +370,6 @@ class Function(object):
             LOG.debug(response)
         except Exception:
             LOG.exception('Unable to list versions')
-        return response['Versions']
-
-    def create_alias(self, name, description, version=None):
-        # Find the current (latest) version by version number
-        # First find the SHA256 of $LATEST
-        if not version:
-            versions = self.list_versions()
-            for v in versions:
-                if v['Version'] == '$LATEST':
-                    latest_sha256 = v['CodeSha256']
-                    break
-            for v in versions:
-                if v['Version'] != '$LATEST':
-                    if v['CodeSha256'] == latest_sha256:
-                        version = v['Version']
-                        break
-        try:
-            LOG.info('creating alias %s=%s', name, version)
-            response = self._lambda_client.call(
-                'create_alias',
-                FunctionName=self.name,
-                Description=description,
-                FunctionVersion=version,
-                Name=name)
-            LOG.debug(response)
-        except Exception:
-            LOG.exception('Unable to create alias')
-
-    def list_aliases(self):
-        LOG.info('listing aliases of %s', self.name)
-        try:
-            response = self._lambda_client.call(
-                'list_aliases',
-                FunctionName=self.name,
-                FunctionVersion=self.version)
-            LOG.debug(response)
-        except Exception:
-            LOG.exception('Unable to list aliases')
         return response['Versions']
 
     def tag(self, name, description):

@@ -120,6 +120,18 @@ class Policy(object):
         except Exception:
             LOG.exception('Error creating new Policy version')
 
+    def _check_md5(self, document):
+        m = hashlib.md5()
+        m.update(document)
+        policy_md5 = m.hexdigest()
+        cached_md5 = self._context.get_cache_value('policy_md5')
+        LOG.debug('policy_md5: %s', policy_md5)
+        LOG.debug('cached md5: %s', cached_md5)
+        if policy_md5 != cached_md5:
+            self._context.set_cache_value('policy_md5', policy_md5)
+            return True
+        return False
+
     def deploy(self):
         LOG.info('deploying policy %s', self.name)
         document = self.document()
@@ -128,19 +140,13 @@ class Policy(object):
             return
         policy = self.exists()
         if policy:
-            m = hashlib.md5()
-            m.update(document)
-            policy_md5 = m.hexdigest()
-            cached_md5 = self._context.get_cache_value('policy_md5')
-            LOG.debug('policy_md5: %s', policy_md5)
-            LOG.debug('cached md5: %s', cached_md5)
-            if policy_md5 != cached_md5:
-                self._context.set_cache_value('policy_md5', policy_md5)
+            if self._check_md5(document):
                 self._add_policy_version()
             else:
                 LOG.info('policy unchanged')
         else:
             # create a new policy
+            self._check_md5(document)
             try:
                 response = self._iam_client.call(
                     'create_policy',

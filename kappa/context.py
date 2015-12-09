@@ -18,6 +18,8 @@ import time
 import os
 import shutil
 
+from botocore.exceptions import ClientError
+
 import kappa.function
 import kappa.event_source
 import kappa.policy
@@ -79,7 +81,7 @@ class Context(object):
 
     @property
     def name(self):
-        return '{}-{}'.format(self.config['name'], self.environment)
+        return self.config.get('name', os.path.basename(os.getcwd()))
 
     @property
     def profile(self):
@@ -184,11 +186,6 @@ class Context(object):
             self.policy.deploy()
         if self.role:
             self.role.create()
-        # There is a consistency problem here.
-        # If you don't wait for a bit, the function.create call
-        # will fail because the policy has not been attached to the role.
-        LOG.debug('Waiting for policy/role propogation')
-        time.sleep(5)
         self.function.deploy()
 
     def invoke(self, data):
@@ -214,9 +211,6 @@ class Context(object):
 
     def tail(self):
         return self.function.tail()
-
-    def tag(self, name, description):
-        return self.function.tag(name, description)
 
     def delete(self):
         for event_source in self.event_sources:
