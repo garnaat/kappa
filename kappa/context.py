@@ -198,7 +198,7 @@ class Context(object):
         # run any unit tests
         unit_test_path = os.path.join(self.test_dir, 'unit')
         if os.path.exists(unit_test_path):
-            os.chdir(self.function.path)
+            os.chdir(self.source_dir)
             print('running unit tests')
             pipe = os.popen(self.unit_test_runner, 'r')
             print(pipe.read())
