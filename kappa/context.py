@@ -18,12 +18,11 @@ import time
 import os
 import shutil
 
-from botocore.exceptions import ClientError
-
 import kappa.function
 import kappa.event_source
 import kappa.policy
 import kappa.role
+import kappa.awsclient
 
 LOG = logging.getLogger(__name__)
 
@@ -34,15 +33,15 @@ InfoFmtString = '...%(message)s'
 class Context(object):
 
     def __init__(self, config_file, environment=None,
-                 debug=False, force=False):
+                 debug=False, recording_path=None):
         if debug:
             self.set_logger('kappa', logging.DEBUG)
         else:
             self.set_logger('kappa', logging.INFO)
+        kappa.awsclient.recording_path = recording_path
         self._load_cache()
         self.config = yaml.load(config_file)
         self.environment = environment
-        self.force = force
         self.policy = kappa.policy.Policy(
             self, self.config['environments'][self.environment])
         self.role = kappa.role.Role(
@@ -104,9 +103,13 @@ class Context(object):
         return self.config.get('tests', '_tests')
 
     @property
+    def source_dir(self):
+        return self.config.get('source', '_src')
+
+    @property
     def unit_test_runner(self):
         return self.config.get('unit_test_runner',
-                               'nosetests . ../_tests/unit/')
+                               'nosetests . ../{}/unit/'.format(self.test_dir))
 
     @property
     def exec_role_arn(self):

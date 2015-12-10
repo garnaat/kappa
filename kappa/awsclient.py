@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import logging
-import os
 
 import jmespath
 import boto3
@@ -44,9 +43,11 @@ class AWSClient(object):
         return self._profile_name
 
     def _create_client(self):
+        global recording_path
         session = boto3.session.Session(
             region_name=self._region_name, profile_name=self._profile_name)
-        placebo.attach(session)
+        if recording_path:
+            placebo.attach(session)
         client = session.client(self._service_name)
         return client
 
@@ -94,12 +95,7 @@ class AWSClient(object):
 
 _client_cache = {}
 
-
-def save_recordings(recording_path):
-    for key in _client_cache:
-        client = _client_cache[key]
-        full_path = os.path.join(recording_path, '{}.json'.format(key))
-        client.client.meta.placebo.save(full_path)
+recording_path = None
 
 
 def create_client(service_name, context):
@@ -109,16 +105,5 @@ def create_client(service_name, context):
     if client_key not in _client_cache:
         client = AWSClient(service_name, context.region,
                            context.profile)
-        if 'placebo' in context.config:
-            placebo_cfg = context.config['placebo']
-            if placebo_cfg.get('mode') == 'play':
-                full_path = os.path.join(
-                    placebo_cfg['recording_path'],
-                    '{}.json'.format(client_key))
-                if os.path.exists(full_path):
-                    client.client.meta.placebo.load(full_path)
-                client.client.meta.placebo.start()
-            elif placebo_cfg['mode'] == 'record':
-                client.client.meta.placebo.record()
         _client_cache[client_key] = client
     return _client_cache[client_key]

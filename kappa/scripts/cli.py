@@ -40,9 +40,14 @@ pass_ctx = click.make_pass_decorator(Context)
     default='dev',
     help='Specify which environment to work with (default dev)'
 )
+@click.option(
+    '--record-path',
+    type=click.Path(exists=True, file_okay=False, writable=True),
+    help='Uses placebo to record AWS responses to this path'
+)
 @click.pass_context
-def cli(ctx, config=None, debug=False, env=None):
-    ctx.obj = Context(config, env, debug)
+def cli(ctx, config=None, debug=False, env=None, record_path=None):
+    ctx.obj = Context(config, env, debug, record_path)
 
 
 @cli.command()

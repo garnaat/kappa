@@ -66,10 +66,6 @@ class Function(object):
         return '{}.zip'.format(self._context.name)
 
     @property
-    def path(self):
-        return self._config.get('path', '_src')
-
-    @property
     def tests(self):
         return self._config.get('tests', '_tests')
 
@@ -137,7 +133,7 @@ class Function(object):
         # changed and needs to be updated so return True.
         changed = True
         self._copy_config_file()
-        self.zip_lambda_function(self.zipfile_name, self.path)
+        self.zip_lambda_function(self.zipfile_name, self._context.source_dir)
         m = hashlib.md5()
         with open(self.zipfile_name, 'rb') as fp:
             m.update(fp.read())
@@ -175,9 +171,9 @@ class Function(object):
 
     def _copy_config_file(self):
         config_name = '{}_config.json'.format(self._context.environment)
-        config_path = os.path.join(self.path, config_name)
+        config_path = os.path.join(self._context.source_dir, config_name)
         if os.path.exists(config_path):
-            dest_path = os.path.join(self.path, 'config.json')
+            dest_path = os.path.join(self._context.source_dir, 'config.json')
             LOG.debug('copy %s to %s', config_path, dest_path)
             shutil.copy2(config_path, dest_path)
 
@@ -228,20 +224,24 @@ class Function(object):
             LOG.exception('Unable to list aliases')
         return response['Versions']
 
-    def create_alias(self, name, description, version=None):
+    def find_latest_version(self):
         # Find the current (latest) version by version number
         # First find the SHA256 of $LATEST
-        if not version:
-            versions = self.list_versions()
-            for v in versions:
-                if v['Version'] == '$LATEST':
-                    latest_sha256 = v['CodeSha256']
+        versions = self.list_versions()
+        for v in versions:
+            if v['Version'] == '$LATEST':
+                latest_sha256 = v['CodeSha256']
+                break
+        for v in versions:
+            if v['Version'] != '$LATEST':
+                if v['CodeSha256'] == latest_sha256:
+                    version = v['Version']
                     break
-            for v in versions:
-                if v['Version'] != '$LATEST':
-                    if v['CodeSha256'] == latest_sha256:
-                        version = v['Version']
-                        break
+        return version
+
+    def create_alias(self, name, description, version=None):
+        if not version:
+            version = self.find_latest_version()
         try:
             LOG.debug('creating alias %s=%s', name, version)
             response = self._lambda_client.call(
@@ -253,6 +253,23 @@ class Function(object):
             LOG.debug(response)
         except Exception:
             LOG.exception('Unable to create alias')
+
+    def update_alias(self, name, description, version=None):
+        # Find the current (latest) version by version number
+        # First find the SHA256 of $LATEST
+        if not version:
+            version = self.find_latest_version()
+        try:
+            LOG.debug('updating alias %s=%s', name, version)
+            response = self._lambda_client.call(
+                'update_alias',
+                FunctionName=self.name,
+                Description=description,
+                FunctionVersion=version,
+                Name=name)
+            LOG.debug(response)
+        except Exception:
+            LOG.exception('Unable to update alias')
 
     def add_permissions(self):
         if self.permissions:
@@ -329,7 +346,7 @@ class Function(object):
                         ZipFile=zipdata,
                         Publish=True)
                     LOG.debug(response)
-                    self.create_alias(
+                    self.update_alias(
                         self._context.environment,
                         'For the {} stage'.format(self._context.environment))
                 except Exception:
