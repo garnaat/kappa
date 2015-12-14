@@ -26,7 +26,8 @@ class Log(object):
     def __init__(self, context, log_group_name):
         self._context = context
         self.log_group_name = log_group_name
-        self._log_client = kappa.awsclient.create_client('logs', context)
+        self._log_client = kappa.awsclient.create_client(
+            'logs', context.session)
 
     def _check_for_log_group(self):
         LOG.debug('checking for log group')

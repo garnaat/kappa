@@ -16,18 +16,18 @@ import logging
 
 import jmespath
 import boto3
-import placebo
 
 
 LOG = logging.getLogger(__name__)
 
+_session_cache = {}
+
 
 class AWSClient(object):
 
-    def __init__(self, service_name, region_name, profile_name):
+    def __init__(self, service_name, session):
         self._service_name = service_name
-        self._region_name = region_name
-        self._profile_name = profile_name
+        self._session = session
         self.client = self._create_client()
 
     @property
@@ -35,20 +35,11 @@ class AWSClient(object):
         return self._service_name
 
     @property
-    def region_name(self):
-        return self._region_name
-
-    @property
-    def profile_name(self):
-        return self._profile_name
+    def session(self):
+        return self._session
 
     def _create_client(self):
-        global recording_path
-        session = boto3.session.Session(
-            region_name=self._region_name, profile_name=self._profile_name)
-        if recording_path:
-            placebo.attach(session)
-        client = session.client(self._service_name)
+        client = self._session.client(self._service_name)
         return client
 
     def call(self, op_name, query=None, **kwargs):
@@ -93,17 +84,15 @@ class AWSClient(object):
         return data
 
 
-_client_cache = {}
+def create_session(profile_name, region_name):
+    global _session_cache
+    session_key = '{}:{}'.format(profile_name, region_name)
+    if session_key not in _session_cache:
+        session = boto3.session.Session(
+            region_name=region_name, profile_name=profile_name)
+        _session_cache[session_key] = session
+    return _session_cache[session_key]
 
-recording_path = None
 
-
-def create_client(service_name, context):
-    global _client_cache
-    client_key = '{}:{}:{}'.format(service_name, context.region,
-                                   context.profile)
-    if client_key not in _client_cache:
-        client = AWSClient(service_name, context.region,
-                           context.profile)
-        _client_cache[client_key] = client
-    return _client_cache[client_key]
+def create_client(service_name, session):
+    return AWSClient(service_name, session)

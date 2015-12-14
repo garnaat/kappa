@@ -33,7 +33,7 @@ class Function(object):
         self._context = context
         self._config = config
         self._lambda_client = kappa.awsclient.create_client(
-            'lambda', context)
+            'lambda', context.session)
         self._response = None
         self._log = None
 

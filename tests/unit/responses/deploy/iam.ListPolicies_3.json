@@ -1,0 +1,70 @@
+{
+    "status_code": 200, 
+    "data": {
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "1b40516e-a219-11e5-bb1e-6b18bfdcba09"
+        }, 
+        "IsTruncated": false, 
+        "Policies": [
+            {
+                "PolicyName": "kappa-simple_dev", 
+                "CreateDate": {
+                    "hour": 4, 
+                    "__class__": "datetime", 
+                    "month": 12, 
+                    "second": 46, 
+                    "microsecond": 0, 
+                    "year": 2015, 
+                    "day": 14, 
+                    "minute": 13
+                }, 
+                "AttachmentCount": 1, 
+                "IsAttachable": true, 
+                "PolicyId": "ANPAJ6USPUIU5QKQ7DWMG", 
+                "DefaultVersionId": "v1", 
+                "Path": "/kappa/", 
+                "Arn": "arn:aws:iam::123456789012:policy/kappa/kappa-simple_dev", 
+                "UpdateDate": {
+                    "hour": 4, 
+                    "__class__": "datetime", 
+                    "month": 12, 
+                    "second": 46, 
+                    "microsecond": 0, 
+                    "year": 2015, 
+                    "day": 14, 
+                    "minute": 13
+                }
+            }, 
+            {
+                "PolicyName": "FooBar15", 
+                "CreateDate": {
+                    "hour": 19, 
+                    "__class__": "datetime", 
+                    "month": 12, 
+                    "second": 15, 
+                    "microsecond": 0, 
+                    "year": 2015, 
+                    "day": 10, 
+                    "minute": 22
+                }, 
+                "AttachmentCount": 1, 
+                "IsAttachable": true, 
+                "PolicyId": "ANPAJ3MM445EFVC6OWPIO", 
+                "DefaultVersionId": "v1", 
+                "Path": "/kappa/", 
+                "Arn": "arn:aws:iam::123456789012:policy/kappa/FooBar15", 
+                "UpdateDate": {
+                    "hour": 19, 
+                    "__class__": "datetime", 
+                    "month": 12, 
+                    "second": 15, 
+                    "microsecond": 0, 
+                    "year": 2015, 
+                    "day": 10, 
+                    "minute": 22
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "status_code": 200, 
+    "data": {
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "1860ff11-a219-11e5-b9da-196ca0eccf24"
+        }, 
+        "Versions": [
+            {
+                "Version": "$LATEST", 
+                "CodeSha256": "JklpzNjuO6TLDiNe6nVYWeo1Imq6bF5uaMt2L0bqp5Y=", 
+                "FunctionName": "kappa-simple", 
+                "MemorySize": 256, 
+                "CodeSize": 948, 
+                "FunctionArn": "arn:aws:lambda:us-west-2:123456789012:function:kappa-simple:$LATEST", 
+                "Handler": "simple.handler", 
+                "Role": "arn:aws:iam::123456789012:role/kappa/kappa-simple_dev", 
+                "Timeout": 3, 
+                "LastModified": "2015-12-14T04:13:56.737+0000", 
+                "Runtime": "python2.7", 
+                "Description": "A very simple Kappa example"
+            }, 
+            {
+                "Version": "12", 
+                "CodeSha256": "JklpzNjuO6TLDiNe6nVYWeo1Imq6bF5uaMt2L0bqp5Y=", 
+                "FunctionName": "kappa-simple", 
+                "MemorySize": 256, 
+                "CodeSize": 948, 
+                "FunctionArn": "arn:aws:lambda:us-west-2:123456789012:function:kappa-simple:12", 
+                "Handler": "simple.handler", 
+                "Role": "arn:aws:iam::123456789012:role/kappa/kappa-simple_dev", 
+                "Timeout": 3, 
+                "LastModified": "2015-12-14T04:13:56.737+0000", 
+                "Runtime": "python2.7", 
+                "Description": "A very simple Kappa example"
+            }
+        ]
+    }
+}

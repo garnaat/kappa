@@ -1,5 +1,5 @@
 boto3>=1.2.2
-placebo>=0.3.0
+placebo>=0.4.1
 click==5.1
 PyYAML>=3.11
 mock>=1.0.1

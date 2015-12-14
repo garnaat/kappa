@@ -26,7 +26,8 @@ class Policy(object):
     def __init__(self, context, config):
         self._context = context
         self._config = config
-        self._iam_client = kappa.awsclient.create_client('iam', self._context)
+        self._iam_client = kappa.awsclient.create_client(
+            'iam', self._context.session)
         self._arn = self._config['policy'].get('arn', None)
 
     @property
@@ -75,10 +76,11 @@ class Policy(object):
     def _find_all_policies(self):
         try:
             response = self._iam_client.call(
-                'list_policies')
+                'list_policies', PathPrefix=self.path)
         except Exception:
             LOG.exception('Error listing policies')
-        return response['Policies']
+            response = {}
+        return response.get('Policies', list())
 
     def _list_versions(self):
         try:

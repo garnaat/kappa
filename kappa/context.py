@@ -24,6 +24,8 @@ import kappa.policy
 import kappa.role
 import kappa.awsclient
 
+import placebo
+
 LOG = logging.getLogger(__name__)
 
 DebugFmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -38,10 +40,15 @@ class Context(object):
             self.set_logger('kappa', logging.DEBUG)
         else:
             self.set_logger('kappa', logging.INFO)
-        kappa.awsclient.recording_path = recording_path
         self._load_cache()
         self.config = yaml.load(config_file)
         self.environment = environment
+        profile = self.config['environments'][self.environment]['profile']
+        region = self.config['environments'][self.environment]['region']
+        self.session = kappa.awsclient.create_session(profile, region)
+        if recording_path:
+            self.pill = placebo.attach(self.session, recording_path)
+            self.pill.record()
         self.policy = kappa.policy.Policy(
             self, self.config['environments'][self.environment])
         self.role = kappa.role.Role(

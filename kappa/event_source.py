@@ -48,7 +48,8 @@ class KinesisEventSource(EventSource):
 
     def __init__(self, context, config):
         super(KinesisEventSource, self).__init__(context, config)
-        self._lambda = kappa.awsclient.create_client('kinesis', context)
+        self._lambda = kappa.awsclient.create_client(
+            'kinesis', context.session)
 
     def _get_uuid(self, function):
         uuid = None
@@ -150,7 +151,7 @@ class S3EventSource(EventSource):
 
     def __init__(self, context, config):
         super(S3EventSource, self).__init__(context, config)
-        self._s3 = kappa.awsclient.create_client('s3', config)
+        self._s3 = kappa.awsclient.create_client('s3', context.session)
 
     def _make_notification_id(self, function_name):
         return 'Kappa-%s-notification' % function_name
@@ -213,7 +214,7 @@ class SNSEventSource(EventSource):
 
     def __init__(self, context, config):
         super(SNSEventSource, self).__init__(context, config)
-        self._sns = kappa.awsclient.create_client('sns', context)
+        self._sns = kappa.awsclient.create_client('sns', context.session)
 
     def _make_notification_id(self, function_name):
         return 'Kappa-%s-notification' % function_name

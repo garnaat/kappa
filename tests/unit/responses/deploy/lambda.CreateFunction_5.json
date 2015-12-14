@@ -1,0 +1,21 @@
+{
+    "status_code": 201, 
+    "data": {
+        "CodeSha256": "JklpzNjuO6TLDiNe6nVYWeo1Imq6bF5uaMt2L0bqp5Y=", 
+        "FunctionName": "kappa-simple", 
+        "ResponseMetadata": {
+            "HTTPStatusCode": 201, 
+            "RequestId": "1820256f-a219-11e5-acaa-ebe01320cf02"
+        }, 
+        "CodeSize": 948, 
+        "MemorySize": 256, 
+        "FunctionArn": "arn:aws:lambda:us-west-2:123456789012:function:kappa-simple", 
+        "Version": "12", 
+        "Role": "arn:aws:iam::123456789012:role/kappa/kappa-simple_dev", 
+        "Timeout": 3, 
+        "LastModified": "2015-12-14T04:13:56.737+0000", 
+        "Handler": "simple.handler", 
+        "Runtime": "python2.7", 
+        "Description": "A very simple Kappa example"
+    }
+}

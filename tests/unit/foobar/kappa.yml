@@ -1,0 +1,17 @@
+---
+name: kappa-simple
+environments:
+  dev:
+    profile: foobar
+    region: us-west-2
+    policy:
+      resources:
+        - arn: arn:aws:logs:*:*:*
+          actions:
+          - "*"
+lambda:    
+  description: Foo the Bar
+  handler: simple.handler
+  runtime: python2.7
+  memory_size: 256
+  timeout: 3

@@ -1,0 +1,13 @@
+{
+    "status_code": 404, 
+    "data": {
+        "ResponseMetadata": {
+            "HTTPStatusCode": 404, 
+            "RequestId": "12caa276-a219-11e5-bc80-bb0600635952"
+        }, 
+        "Error": {
+            "Message": "Function not found: arn:aws:lambda:us-west-2:860421987956:function:kappa-simple", 
+            "Code": "ResourceNotFoundException"
+        }
+    }
+}

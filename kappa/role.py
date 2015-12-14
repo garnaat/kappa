@@ -40,7 +40,8 @@ class Role(object):
     def __init__(self, context, config):
         self._context = context
         self._config = config
-        self._iam_client = kappa.awsclient.create_client('iam', context)
+        self._iam_client = kappa.awsclient.create_client(
+            'iam', context.session)
         self._arn = None
 
     @property
@@ -64,7 +65,8 @@ class Role(object):
             response = self._iam_client.call('list_roles')
         except Exception:
             LOG.exception('Error listing roles')
-        return response['Roles']
+            response = {}
+        return response.get('Roles', list())
 
     def exists(self):
         for role in self._find_all_roles():

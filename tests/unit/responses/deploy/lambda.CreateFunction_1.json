@@ -1,0 +1,13 @@
+{
+    "status_code": 400, 
+    "data": {
+        "ResponseMetadata": {
+            "HTTPStatusCode": 400, 
+            "RequestId": "12ed468e-a219-11e5-89fa-9b1d3e60e617"
+        }, 
+        "Error": {
+            "Message": "The role defined for the task cannot be assumed by Lambda.", 
+            "Code": "InvalidParameterValueException"
+        }
+    }
+}
