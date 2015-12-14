@@ -137,7 +137,7 @@ class Function(object):
         m = hashlib.md5()
         with open(self.zipfile_name, 'rb') as fp:
             m.update(fp.read())
-        zip_md5 = m.hexdigest()
+        zip_md5 = m.hexdigest().encode('utf-8')
         cached_md5 = self._context.get_cache_value('zip_md5')
         LOG.debug('zip_md5: %s', zip_md5)
         LOG.debug('cached md5: %s', cached_md5)
@@ -158,7 +158,7 @@ class Function(object):
         m.update(str(self.memory_size))
         m.update(self._context.exec_role_arn)
         m.update(str(self.timeout))
-        config_md5 = m.hexdigest()
+        config_md5 = m.hexdigest().encode('utf-8')
         cached_md5 = self._context.get_cache_value('config_md5')
         LOG.debug('config_md5: %s', config_md5)
         LOG.debug('cached_md5: %s', cached_md5)
