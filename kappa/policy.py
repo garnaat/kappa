@@ -124,7 +124,7 @@ class Policy(object):
 
     def _check_md5(self, document):
         m = hashlib.md5()
-        m.update(document)
+        m.update(document.encode('utf-8'))
         policy_md5 = m.hexdigest()
         cached_md5 = self._context.get_cache_value('policy_md5')
         LOG.debug('policy_md5: %s', policy_md5)
