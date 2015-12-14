@@ -322,7 +322,7 @@ class Function(object):
                         self._context.environment)
                     self.create_alias(self._context.environment, description)
                     ready = True
-                except ClientError, e:
+                except ClientError as e:
                     if 'InvalidParameterValueException' in str(e):
                         LOG.debug('Role is not ready, waiting')
                         time.sleep(2)
