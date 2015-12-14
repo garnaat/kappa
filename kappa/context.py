@@ -63,7 +63,7 @@ class Context(object):
         if os.path.isdir('.kappa'):
             cache_file = os.path.join('.kappa', 'cache')
             if os.path.isfile(cache_file):
-                with open(cache_file, 'rb') as fp:
+                with open(cache_file, 'r') as fp:
                     self.cache = yaml.load(fp)
 
     def _delete_cache(self):
@@ -75,14 +75,14 @@ class Context(object):
         if not os.path.isdir('.kappa'):
             os.mkdir('.kappa')
         cache_file = os.path.join('.kappa', 'cache')
-        with open(cache_file, 'wb') as fp:
+        with open(cache_file, 'w') as fp:
             yaml.dump(self.cache, fp)
 
     def get_cache_value(self, key):
         return self.cache.setdefault(self.environment, dict()).get(key)
 
     def set_cache_value(self, key, value):
-        self.cache.setdefault(self.environment, dict())[key] = value
+        self.cache.setdefault(self.environment, dict())[key] = value.encode('utf-8')
         self._save_cache()
 
     @property
