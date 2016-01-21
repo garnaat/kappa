@@ -49,7 +49,7 @@ class KinesisEventSource(EventSource):
     def __init__(self, context, config):
         super(KinesisEventSource, self).__init__(context, config)
         self._lambda = kappa.awsclient.create_client(
-            'kinesis', context.session)
+            'lambda', context.session)
 
     def _get_uuid(self, function):
         uuid = None
@@ -77,7 +77,7 @@ class KinesisEventSource(EventSource):
             LOG.exception('Unable to add event source')
 
     def enable(self, function):
-        self.enabled = True
+        self._config['enabled'] = True
         try:
             response = self._lambda.call(
                 'update_event_source_mapping',
@@ -89,7 +89,7 @@ class KinesisEventSource(EventSource):
             LOG.exception('Unable to enable event source')
 
     def disable(self, function):
-        self.enabled = False
+        self._config['enabled'] = False
         try:
             response = self._lambda.call(
                 'update_event_source_mapping',

@@ -89,7 +89,8 @@ class Policy(object):
                 PolicyArn=self.arn)
         except Exception:
             LOG.exception('Error listing policy versions')
-        return response['Versions']
+            response = {}
+        return response.get('Versions', list())
 
     def exists(self):
         for policy in self._find_all_policies():

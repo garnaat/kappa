@@ -18,6 +18,7 @@ import zipfile
 import time
 import shutil
 import hashlib
+import uuid
 
 from botocore.exceptions import ClientError
 
@@ -89,6 +90,10 @@ class Function(object):
         return self._get_response_configuration('FunctionArn')
 
     @property
+    def alias_arn(self):
+        return self.arn + ':{}'.format(self._context.environment)
+
+    @property
     def repository_type(self):
         return self._get_response_code('RepositoryType')
 
@@ -99,6 +104,12 @@ class Function(object):
     @property
     def version(self):
         return self._get_response_configuration('Version')
+
+    @property
+    def deployment_uri(self):
+        return 'https://{}.execute-api.{}.amazonaws.com/{}'.format(
+            self.api_id, self._apigateway_client.region_name,
+            self._context.environment)
 
     def _get_response(self):
         if self._response is None:
@@ -217,12 +228,11 @@ class Function(object):
         try:
             response = self._lambda_client.call(
                 'list_aliases',
-                FunctionName=self.name,
-                FunctionVersion=self.version)
+                FunctionName=self.name)
             LOG.debug(response)
         except Exception:
             LOG.exception('Unable to list aliases')
-        return response['Versions']
+        return response.get('Versions', list())
 
     def find_latest_version(self):
         # Find the current (latest) version by version number
@@ -271,27 +281,34 @@ class Function(object):
         except Exception:
             LOG.exception('Unable to update alias')
 
+    def add_permission(self, action, principal,
+                       source_arn=None, source_account=None):
+        try:
+            kwargs = {
+                'FunctionName': self.name,
+                'Qualifier': self._context.environment,
+                'StatementId': str(uuid.uuid4()),
+                'Action': action,
+                'Principal': principal}
+            if source_arn:
+                kwargs['SourceArn'] = source_arn
+            if source_account:
+                kwargs['SourceAccount'] = source_account
+            response = self._lambda_client.call(
+                'add_permission', **kwargs)
+            LOG.debug(response)
+        except Exception:
+            LOG.exception('Unable to add permission')
+
     def add_permissions(self):
         if self.permissions:
             time.sleep(5)
         for permission in self.permissions:
-            try:
-                kwargs = {
-                    'FunctionName': self.name,
-                    'StatementId': permission['statement_id'],
-                    'Action': permission['action'],
-                    'Principal': permission['principal']}
-                source_arn = permission.get('source_arn', None)
-                if source_arn:
-                    kwargs['SourceArn'] = source_arn
-                source_account = permission.get('source_account', None)
-                if source_account:
-                    kwargs['SourceAccount'] = source_account
-                response = self._lambda_client.call(
-                    'add_permission', **kwargs)
-                LOG.debug(response)
-            except Exception:
-                LOG.exception('Unable to add permission')
+            self.add_permission(
+                permission['action'],
+                permission['principal'],
+                permission.get('source_arn'),
+                permission.get('source_account'))
 
     def create(self):
         LOG.info('creating function %s', self.name)
@@ -414,15 +431,6 @@ class Function(object):
             LOG.debug('function %s not found', self.name)
             response = None
         return response
-
-    def invoke_asynch(self, data_file):
-        LOG.debug('_invoke_async %s', data_file)
-        with open(data_file) as fp:
-            response = self._lambda_client.call(
-                'invoke_async',
-                FunctionName=self.name,
-                InvokeArgs=fp)
-            LOG.debug(response)
 
     def _invoke(self, data, invocation_type):
         LOG.debug('invoke %s as %s', self.name, invocation_type)

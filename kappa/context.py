@@ -19,6 +19,7 @@ import os
 import shutil
 
 import kappa.function
+import kappa.restapi
 import kappa.event_source
 import kappa.policy
 import kappa.role
@@ -55,6 +56,11 @@ class Context(object):
             self, self.config['environments'][self.environment])
         self.function = kappa.function.Function(
             self, self.config['lambda'])
+        if 'restapi' in self.config:
+            self.restapi = kappa.restapi.RestApi(
+                self, self.config['restapi'])
+        else:
+            self.restapi = None
         self.event_sources = []
         self._create_event_sources()
 
@@ -82,7 +88,8 @@ class Context(object):
         return self.cache.setdefault(self.environment, dict()).get(key)
 
     def set_cache_value(self, key, value):
-        self.cache.setdefault(self.environment, dict())[key] = value.encode('utf-8')
+        self.cache.setdefault(
+            self.environment, dict())[key] = value.encode('utf-8')
         self._save_cache()
 
     @property
@@ -149,8 +156,9 @@ class Context(object):
         log.addHandler(ch)
 
     def _create_event_sources(self):
-        if 'event_sources' in self.config['lambda']:
-            for event_source_cfg in self.config['lambda']['event_sources']:
+        env_cfg = self.config['environments'][self.environment]
+        if 'event_sources' in env_cfg:
+            for event_source_cfg in env_cfg['event_sources']:
                 _, _, svc, _ = event_source_cfg['arn'].split(':', 3)
                 if svc == 'kinesis':
                     self.event_sources.append(
@@ -179,6 +187,14 @@ class Context(object):
         for event_source in self.event_sources:
             event_source.update(self.function)
 
+    def enable_event_sources(self):
+        for event_source in self.event_sources:
+            event_source.enable(self.function)
+
+    def disable_event_sources(self):
+        for event_source in self.event_sources:
+            event_source.enable(self.function)
+
     def create(self):
         if self.policy:
             self.policy.create()
@@ -197,6 +213,8 @@ class Context(object):
         if self.role:
             self.role.create()
         self.function.deploy()
+        if self.restapi:
+            self.restapi.deploy()
 
     def invoke(self, data):
         return self.function.invoke(data)
@@ -227,6 +245,8 @@ class Context(object):
             event_source.remove(self.function)
         self.function.log.delete()
         self.function.delete()
+        if self.restapi:
+            self.restapi.delete()
         time.sleep(5)
         if self.role:
             self.role.delete()

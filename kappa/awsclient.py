@@ -38,6 +38,10 @@ class AWSClient(object):
     def session(self):
         return self._session
 
+    @property
+    def region_name(self):
+        return self.client.meta.region_name
+
     def _create_client(self):
         client = self._session.client(self._service_name)
         return client
