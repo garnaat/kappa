@@ -31,9 +31,8 @@ LOG = logging.getLogger(__name__)
 class Function(object):
 
     excluded_dirs = ['boto3', 'botocore', 'concurrent', 'dateutil',
-                     'docutils', 'futures', 'jmespath', 'python_dateutil',
-                     'six']
-    excluded_files = ['.gitignore', 'six.py', 'six.pyc']
+                     'docutils', 'futures', 'jmespath', 'python_dateutil']
+    excluded_files = ['.gitignore']
 
     def __init__(self, context, config):
         self._context = context
