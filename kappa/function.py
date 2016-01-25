@@ -30,6 +30,11 @@ LOG = logging.getLogger(__name__)
 
 class Function(object):
 
+    excluded_dirs = ['boto3', 'botocore', 'concurrent', 'dateutil',
+                     'docutils', 'futures', 'jmespath', 'python_dateutil',
+                     'six']
+    excluded_files = ['.gitignore', 'six.py', 'six.pyc']
+
     def __init__(self, context, config):
         self._context = context
         self._config = config
@@ -194,14 +199,22 @@ class Function(object):
         relroot = os.path.abspath(lambda_dir)
         with zipfile.ZipFile(zipfile_name, 'w',
                              compression=zipfile.ZIP_DEFLATED) as zf:
-            for root, _, files in os.walk(lambda_dir):
+            for root, subdirs, files in os.walk(lambda_dir):
+                excluded_dirs = []
+                for subdir in subdirs:
+                    for excluded in self.excluded_dirs:
+                        if subdir.startswith(excluded):
+                            excluded_dirs.append(subdir)
+                for excluded in excluded_dirs:
+                    subdirs.remove(excluded)
                 zf.write(root, os.path.relpath(root, relroot))
                 for filename in files:
-                    filepath = os.path.join(root, filename)
-                    if os.path.isfile(filepath):
-                        arcname = os.path.join(
-                            os.path.relpath(root, relroot), filename)
-                        zf.write(filepath, arcname)
+                    if filename not in self.excluded_files:
+                        filepath = os.path.join(root, filename)
+                        if os.path.isfile(filepath):
+                            arcname = os.path.join(
+                                os.path.relpath(root, relroot), filename)
+                            zf.write(filepath, arcname)
 
     def _zip_lambda_file(self, zipfile_name, lambda_file):
         LOG.debug('_zip_lambda_file: lambda_file=%s', lambda_file)
