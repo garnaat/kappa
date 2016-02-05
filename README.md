@@ -39,7 +39,7 @@ Installation
 The quickest way to get kappa is to install the latest stable version via pip:
 
     pip install kappa
-    
+
 Or for the development version:
 
     pip install git+https://github.com/garnaat/kappa.git
@@ -70,9 +70,9 @@ simple/
 
 Within the directory we see:
 
-* kappa.yml.sample which is a sample YAML configuration file for the project
-* _src which is a directory containing the source code for the Lambda function
-* _test which is a directory containing some test data
+* `kappa.yml.sample` which is a sample YAML configuration file for the project
+* `_src` which is a directory containing the source code for the Lambda function
+* `_test` which is a directory containing some test data
 
 The first step is to make a copy of the sample configuration file:
 
@@ -93,7 +93,7 @@ environments:
       resources:
         - arn: arn:aws:logs:*:*:*
           actions:
-          - "*"
+            - "*"
   prod:
     profile: <your profile here>
     region: <your region here>
@@ -174,12 +174,12 @@ Lambda called kappa-simple-dev.
 To test this out, try this:
 
 ```
-$ kappa invoke _tests/test_one.json 
+$ kappa invoke _tests/test_one.json
 invoking
 START RequestId: 0f2f9ecf-9df7-11e5-ae87-858fbfb8e85f Version: $LATEST
 [DEBUG]	2015-12-08T22:00:15.363Z	0f2f9ecf-9df7-11e5-ae87-858fbfb8e85f	{u'foo': u'bar', u'fie': u'baz'}
 END RequestId: 0f2f9ecf-9df7-11e5-ae87-858fbfb8e85f
-REPORT RequestId: 0f2f9ecf-9df7-11e5-ae87-858fbfb8e85f	Duration: 0.40 ms	Billed Duration: 100 ms 	Memory Size: 256 MB	Max Memory Used: 23 MB	
+REPORT RequestId: 0f2f9ecf-9df7-11e5-ae87-858fbfb8e85f	Duration: 0.40 ms	Billed Duration: 100 ms 	Memory Size: 256 MB	Max Memory Used: 23 MB
 
 Response:
 {"status": "success"}
@@ -204,3 +204,36 @@ Kappa will figure out what has changed and make the necessary updates for you.
 
 That gives you a quick overview of kappa.  To learn more about it, I recommend
 you check out the tutorial.
+
+Policies
+--------
+
+Hands up who loves writing IAM policies. Yeah, that's what I thought. With
+Kappa, there is a simplified way of writing policies and granting your Lambda
+function the permissions it needs.
+
+The simplified version allows you to specify, in your `kappa.yml` file, the
+ARN of the resource you want to access, and then a list of the API methods you
+want to allow. For example:
+
+```
+policy:
+  resources:
+    - arn: arn:aws:logs:*:*:*
+      actions:
+        - "*"
+```
+
+To express this using the official IAM policy format, you can instead use a
+statement:
+
+```
+policy:
+  statements:
+    - Effect: Allow
+      Resource: "*"
+      Action:
+        - "logs:*"
+```
+
+Both of these do the same thing.
