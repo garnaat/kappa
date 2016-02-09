@@ -44,7 +44,8 @@ class Policy(object):
             self.environment)
 
     def document(self):
-        if 'resources' not in self._config['policy']:
+        if ('resources' not in self._config['policy'] and
+                'statements' not in self._config['policy']):
             return None
         document = {"Version": "2012-10-17"}
         statements = []
@@ -58,6 +59,8 @@ class Policy(object):
             for action in resource['actions']:
                 actions.append("{}:{}".format(service, action))
             statement['Action'] = actions
+            statements.append(statement)
+        for statement in self._config['policy'].get('statements', []):
             statements.append(statement)
         return json.dumps(document, indent=2, sort_keys=True)
 
