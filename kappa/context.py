@@ -57,7 +57,7 @@ class Context(object):
         self.function = kappa.function.Function(
             self, self.config['lambda'])
         if 'restapi' in self.config:
-            self.restapi = kappa.restapi.RestApi(
+            self.restapi = RestApi(
                 self, self.config['restapi'])
         else:
             self.restapi = None
