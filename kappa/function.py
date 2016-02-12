@@ -55,6 +55,10 @@ class Function(object):
         return self._config['handler']
 
     @property
+    def dependencies(self):
+        return self._config.get('dependencies', list())
+    
+    @property
     def description(self):
         return self._config['description']
 
@@ -148,7 +152,8 @@ class Function(object):
         # changed and needs to be updated so return True.
         changed = True
         self._copy_config_file()
-        self.zip_lambda_function(self.zipfile_name, self._context.source_dir)
+        files = [] + self.dependencies + [self._context.source_dir]
+        self.zip_lambda_function(self.zipfile_name, files)
         m = hashlib.md5()
         with open(self.zipfile_name, 'rb') as fp:
             m.update(fp.read())
@@ -196,7 +201,7 @@ class Function(object):
         LOG.debug('_zip_lambda_dir: lambda_dir=%s', lambda_dir)
         LOG.debug('zipfile_name=%s', zipfile_name)
         relroot = os.path.abspath(lambda_dir)
-        with zipfile.ZipFile(zipfile_name, 'w',
+        with zipfile.ZipFile(zipfile_name, 'a',
                              compression=zipfile.ZIP_DEFLATED) as zf:
             for root, subdirs, files in os.walk(lambda_dir):
                 excluded_dirs = []
@@ -206,27 +211,49 @@ class Function(object):
                             excluded_dirs.append(subdir)
                 for excluded in excluded_dirs:
                     subdirs.remove(excluded)
-                zf.write(root, os.path.relpath(root, relroot))
+                
+                try:
+                    dir_path = os.path.relpath(root, relroot)
+                    dir_path = os.path.normpath(os.path.splitdrive(dir_path)[1])
+                    while dir_path[0] in (os.sep, os.altsep):
+                        dir_path = dir_path[1:]
+                    dir_path += '/'
+                    zf.getinfo(dir_path)
+                except KeyError:
+                    zf.write(root, dir_path)
+
                 for filename in files:
                     if filename not in self.excluded_files:
                         filepath = os.path.join(root, filename)
                         if os.path.isfile(filepath):
                             arcname = os.path.join(
                                 os.path.relpath(root, relroot), filename)
-                            zf.write(filepath, arcname)
+                            try:
+                                zf.getinfo(arcname)
+                            except KeyError:
+                                zf.write(filepath, arcname)
 
     def _zip_lambda_file(self, zipfile_name, lambda_file):
         LOG.debug('_zip_lambda_file: lambda_file=%s', lambda_file)
         LOG.debug('zipfile_name=%s', zipfile_name)
-        with zipfile.ZipFile(zipfile_name, 'w',
+        with zipfile.ZipFile(zipfile_name, 'a',
                              compression=zipfile.ZIP_DEFLATED) as zf:
-            zf.write(lambda_file)
+            try: 
+                zf.getinfo(lambda_file)
+            except KeyError:
+                zf.write(lambda_file)
 
-    def zip_lambda_function(self, zipfile_name, lambda_fn):
-        if os.path.isdir(lambda_fn):
-            self._zip_lambda_dir(zipfile_name, lambda_fn)
-        else:
-            self._zip_lambda_file(zipfile_name, lambda_fn)
+    def zip_lambda_function(self, zipfile_name, files):
+        try:
+            os.remove(zipfile_name)
+        except OSError:
+            pass
+        for f in files:
+            LOG.debug('adding file %s', f)
+            if os.path.isdir(f):
+                self._zip_lambda_dir(zipfile_name, f)
+            else:
+                self._zip_lambda_file(zipfile_name, f)
 
     def exists(self):
         return self._get_response()
