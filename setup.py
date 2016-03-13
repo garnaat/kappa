@@ -5,8 +5,9 @@ from setuptools import setup, find_packages
 import os
 
 requires = [
-    'boto3==1.1.1',
-    'click==4.0',
+    'boto3>=1.2.2',
+    'placebo>=0.4.1',
+    'click>=5.0',
     'PyYAML>=3.11'
 ]
 
@@ -22,7 +23,10 @@ setup(
     packages=find_packages(exclude=['tests*']),
     package_data={'kappa': ['_version']},
     package_dir={'kappa': 'kappa'},
-    scripts=['bin/kappa'],
+    entry_points="""
+        [console_scripts]
+        kappa=kappa.scripts.cli:cli
+    """,
     install_requires=requires,
     license=open("LICENSE").read(),
     classifiers=(
@@ -32,10 +36,10 @@ setup(
         'Natural Language :: English',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4'
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5'
     ),
 )

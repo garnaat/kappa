@@ -1,21 +1,22 @@
-# Copyright (c) 2014 Mitch Garnaat http://garnaat.org/
+# Copyright (c) 2014, 2015 Mitch Garnaat
 #
-# Licensed under the Apache License, Version 2.0 (the "License"). You
-# may not use this file except in compliance with the License. A copy of
-# the License is located at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# http://aws.amazon.com/apache2.0/
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# or in the "license" file accompanying this file. This file is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-# ANY KIND, either express or implied. See the License for the specific
-# language governing permissions and limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import logging
 
 from botocore.exceptions import ClientError
 
-import kappa.aws
+import kappa.awsclient
 
 LOG = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class EventSource(object):
 
     @property
     def starting_position(self):
-        return self._config.get('starting_position', 'TRIM_HORIZON')
+        return self._config.get('starting_position', 'LATEST')
 
     @property
     def batch_size(self):
@@ -40,19 +41,20 @@ class EventSource(object):
 
     @property
     def enabled(self):
-        return self._config.get('enabled', True)
+        return self._config.get('enabled', False)
 
 
 class KinesisEventSource(EventSource):
 
     def __init__(self, context, config):
         super(KinesisEventSource, self).__init__(context, config)
-        aws = kappa.aws.get_aws(context)
-        self._lambda = aws.create_client('lambda')
+        self._lambda = kappa.awsclient.create_client(
+            'lambda', context.session)
 
     def _get_uuid(self, function):
         uuid = None
-        response = self._lambda.list_event_source_mappings(
+        response = self._lambda.call(
+            'list_event_source_mappings',
             FunctionName=function.name,
             EventSourceArn=self.arn)
         LOG.debug(response)
@@ -62,7 +64,8 @@ class KinesisEventSource(EventSource):
 
     def add(self, function):
         try:
-            response = self._lambda.create_event_source_mapping(
+            response = self._lambda.call(
+                'create_event_source_mapping',
                 FunctionName=function.name,
                 EventSourceArn=self.arn,
                 BatchSize=self.batch_size,
@@ -73,12 +76,37 @@ class KinesisEventSource(EventSource):
         except Exception:
             LOG.exception('Unable to add event source')
 
+    def enable(self, function):
+        self._config['enabled'] = True
+        try:
+            response = self._lambda.call(
+                'update_event_source_mapping',
+                FunctionName=function.name,
+                Enabled=self.enabled
+            )
+            LOG.debug(response)
+        except Exception:
+            LOG.exception('Unable to enable event source')
+
+    def disable(self, function):
+        self._config['enabled'] = False
+        try:
+            response = self._lambda.call(
+                'update_event_source_mapping',
+                FunctionName=function.name,
+                Enabled=self.enabled
+            )
+            LOG.debug(response)
+        except Exception:
+            LOG.exception('Unable to disable event source')
+
     def update(self, function):
         response = None
         uuid = self._get_uuid(function)
         if uuid:
             try:
-                response = self._lambda.update_event_source_mapping(
+                response = self._lambda.call(
+                    'update_event_source_mapping',
                     BatchSize=self.batch_size,
                     Enabled=self.enabled,
                     FunctionName=function.arn)
@@ -90,7 +118,8 @@ class KinesisEventSource(EventSource):
         response = None
         uuid = self._get_uuid(function)
         if uuid:
-            response = self._lambda.delete_event_source_mapping(
+            response = self._lambda.call(
+                'delete_event_source_mapping',
                 UUID=uuid)
             LOG.debug(response)
         return response
@@ -101,7 +130,8 @@ class KinesisEventSource(EventSource):
         uuid = self._get_uuid(function)
         if uuid:
             try:
-                response = self._lambda.get_event_source_mapping(
+                response = self._lambda.call(
+                    'get_event_source_mapping',
                     UUID=self._get_uuid(function))
                 LOG.debug(response)
             except ClientError:
@@ -121,8 +151,7 @@ class S3EventSource(EventSource):
 
     def __init__(self, context, config):
         super(S3EventSource, self).__init__(context, config)
-        aws = kappa.aws.get_aws(context)
-        self._s3 = aws.create_client('s3')
+        self._s3 = kappa.awsclient.create_client('s3', context.session)
 
     def _make_notification_id(self, function_name):
         return 'Kappa-%s-notification' % function_name
@@ -132,7 +161,7 @@ class S3EventSource(EventSource):
 
     def add(self, function):
         notification_spec = {
-            'LambdaFunctionConfigurations':[
+            'LambdaFunctionConfigurations': [
                 {
                     'Id': self._make_notification_id(function.name),
                     'Events': [e for e in self._config['events']],
@@ -141,7 +170,8 @@ class S3EventSource(EventSource):
             ]
         }
         try:
-            response = self._s3.put_bucket_notification_configuration(
+            response = self._s3.call(
+                'put_bucket_notification_configuration',
                 Bucket=self._get_bucket_name(),
                 NotificationConfiguration=notification_spec)
             LOG.debug(response)
@@ -154,7 +184,8 @@ class S3EventSource(EventSource):
 
     def remove(self, function):
         LOG.debug('removing s3 notification')
-        response = self._s3.get_bucket_notification(
+        response = self._s3.call(
+            'get_bucket_notification',
             Bucket=self._get_bucket_name())
         LOG.debug(response)
         if 'CloudFunctionConfiguration' in response:
@@ -162,14 +193,16 @@ class S3EventSource(EventSource):
             if fn_arn == function.arn:
                 del response['CloudFunctionConfiguration']
                 del response['ResponseMetadata']
-                response = self._s3.put_bucket_notification(
+                response = self._s3.call(
+                    'put_bucket_notification',
                     Bucket=self._get_bucket_name(),
                     NotificationConfiguration=response)
                 LOG.debug(response)
 
     def status(self, function):
         LOG.debug('status for s3 notification for %s', function.name)
-        response = self._s3.get_bucket_notification(
+        response = self._s3.call(
+            'get_bucket_notification',
             Bucket=self._get_bucket_name())
         LOG.debug(response)
         if 'CloudFunctionConfiguration' not in response:
@@ -181,15 +214,15 @@ class SNSEventSource(EventSource):
 
     def __init__(self, context, config):
         super(SNSEventSource, self).__init__(context, config)
-        aws = kappa.aws.get_aws(context)
-        self._sns = aws.create_client('sns')
+        self._sns = kappa.awsclient.create_client('sns', context.session)
 
     def _make_notification_id(self, function_name):
         return 'Kappa-%s-notification' % function_name
 
     def exists(self, function):
         try:
-            response = self._sns.list_subscriptions_by_topic(
+            response = self._sns.call(
+                'list_subscriptions_by_topic',
                 TopicArn=self.arn)
             LOG.debug(response)
             for subscription in response['Subscriptions']:
@@ -201,7 +234,8 @@ class SNSEventSource(EventSource):
 
     def add(self, function):
         try:
-            response = self._sns.subscribe(
+            response = self._sns.call(
+                'subscribe',
                 TopicArn=self.arn, Protocol='lambda',
                 Endpoint=function.arn)
             LOG.debug(response)
@@ -216,7 +250,8 @@ class SNSEventSource(EventSource):
         try:
             subscription = self.exists(function)
             if subscription:
-                response = self._sns.unsubscribe(
+                response = self._sns.call(
+                    'unsubscribe',
                     SubscriptionArn=subscription['SubscriptionArn'])
                 LOG.debug(response)
         except Exception:

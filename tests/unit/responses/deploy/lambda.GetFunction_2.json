@@ -1,0 +1,27 @@
+{
+    "status_code": 200, 
+    "data": {
+        "Code": {
+            "RepositoryType": "S3", 
+            "Location": "https://awslambda-us-west-2-tasks.s3-us-west-2.amazonaws.com/snapshots/123456789012/kappa-simple-99dba060-c458-48c6-ab7b-501063603e69?x-amz-security-token=AQoDYXdzECQa4AOvxYmkiVqa3ost0drsHs84f3tyUBYSVQUm%2BVvFZgAqx9JDt55l4N4T%2FwH8302pH0ICUZfCRRfc%2FuWtukJsT33XIsG6Xw0Br8w00y07RRpZYQLiJqTXi0i2EFZ6LMIRsGBgKV%2BdufXXu7P9yfzqBiFUrfUD6fYeRNLdv34aXUDto0G0gTj3ZDv9gqO9q7YEXbeu1NI62cIfuEGph2ptFj5V1E%2BijK0h9XEW0mkfuomQt6oeii%2FkkNNm5tEyUlpeX17z1sbX3NYoqJrap0QdoqXkak%2BFPvJQG7hm7eJ40b2ymve9L3gvIOiKNzmQrzay77uEkYDNLxK89QMlYRtRG6vTHppdZzTVIooTFVdA6NSSvYHnjryStLA3VUnDG%2FsL9xAiHH8l4kzq%2ByvatF%2Fg8wTNXOdFxt0VMVkJVbwG%2FUex7juyEcRAJUGNaHBZNLPJVUL%2BfAQljCwJAnjXxD%2FpjEtyLi9YbdfLGywkBKccoKh7AmjJXwzT8TusWNKmmW0XJL%2Fn81NE84Ni9iVB8JHxRbwaJXT2ou0ytwn%2BIIlRcmwXSIwA3xm%2FXynUTfOuXZ3UMGuBlHtt45uKGJvvp5d6RQicK5q5LXFQgGxj5gUqgty0jPhPE%2BN%2BF8WUwSk3eNwPiwMgwOS4swU%3D&AWSAccessKeyId=ASIAIHZZJVPM3RQS3QOQ&Expires=1450067042&Signature=QeC65kDb6N4CNRGn9IiQNBSpl4g%3D"
+        }, 
+        "Configuration": {
+            "Version": "$LATEST", 
+            "CodeSha256": "JklpzNjuO6TLDiNe6nVYWeo1Imq6bF5uaMt2L0bqp5Y=", 
+            "FunctionName": "kappa-simple", 
+            "MemorySize": 256, 
+            "CodeSize": 948, 
+            "FunctionArn": "arn:aws:lambda:us-west-2:123456789012:function:kappa-simple", 
+            "Handler": "simple.handler", 
+            "Role": "arn:aws:iam::123456789012:role/kappa/kappa-simple_dev", 
+            "Timeout": 3, 
+            "LastModified": "2015-12-14T04:13:56.737+0000", 
+            "Runtime": "python2.7", 
+            "Description": "A very simple Kappa example"
+        }, 
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "1bc69855-a219-11e5-990d-c158fa575e6a"
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "status_code": 201, 
+    "data": {
+        "AliasArn": "arn:aws:lambda:us-west-2:123456789012:function:kappa-simple:dev", 
+        "FunctionVersion": "12", 
+        "Name": "dev", 
+        "ResponseMetadata": {
+            "HTTPStatusCode": 201, 
+            "RequestId": "1872d8ff-a219-11e5-9579-ab6c3f6de03e"
+        }, 
+        "Description": "For stage dev"
+    }
+}

@@ -1,0 +1,46 @@
+{
+    "status_code": 200, 
+    "data": {
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "120be6dd-a219-11e5-ad54-c769aa17a0a1"
+        }, 
+        "IsTruncated": false, 
+        "Roles": [
+            {
+                "AssumeRolePolicyDocument": "%7B%22Version%22%3A%222012-10-17%22%2C%22Statement%22%3A%5B%7B%22Sid%22%3A%22%22%2C%22Effect%22%3A%22Allow%22%2C%22Principal%22%3A%7B%22Service%22%3A%22lambda.amazonaws.com%22%7D%2C%22Action%22%3A%22sts%3AAssumeRole%22%7D%5D%7D", 
+                "RoleId": "AROAJC6I44KNC2N4C6DUO", 
+                "CreateDate": {
+                    "hour": 13, 
+                    "__class__": "datetime", 
+                    "month": 8, 
+                    "second": 29, 
+                    "microsecond": 0, 
+                    "year": 2015, 
+                    "day": 12, 
+                    "minute": 10
+                }, 
+                "RoleName": "FooBar1", 
+                "Path": "/kappa/", 
+                "Arn": "arn:aws:iam::123456789012:role/kappa/FooBar1"
+            }, 
+            {
+                "AssumeRolePolicyDocument": "%7B%22Version%22%3A%222012-10-17%22%2C%22Statement%22%3A%5B%7B%22Sid%22%3A%22%22%2C%22Effect%22%3A%22Allow%22%2C%22Principal%22%3A%7B%22AWS%22%3A%22arn%3Aaws%3Aiam%3A%3A433502988969%3Aroot%22%7D%2C%22Action%22%3A%22sts%3AAssumeRole%22%7D%5D%7D", 
+                "RoleId": "AROAIPICAZWCWSIUY6WBC", 
+                "CreateDate": {
+                    "hour": 6, 
+                    "__class__": "datetime", 
+                    "month": 5, 
+                    "second": 3, 
+                    "microsecond": 0, 
+                    "year": 2015, 
+                    "day": 5, 
+                    "minute": 31
+                }, 
+                "RoleName": "FooBar2", 
+                "Path": "/", 
+                "Arn": "arn:aws:iam::123456789012:role/FooBar2"
+            }
+        ]
+    }
+}
