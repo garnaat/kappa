@@ -187,6 +187,15 @@ class Context(object):
         for event_source in self.event_sources:
             event_source.update(self.function)
 
+    def list_event_sources(self):
+        event_sources = []
+        for event_source in self.event_sources:
+            event_sources.append({'arn': event_source.arn,
+                                  'starting_position': event_source.starting_position,
+                                  'batch_size': event_source.batch_size,
+                                  'enabled': event_source.enabled})
+        return event_sources
+
     def enable_event_sources(self):
         for event_source in self.event_sources:
             event_source.enable(self.function)
@@ -206,6 +215,7 @@ class Context(object):
         LOG.debug('Waiting for policy/role propogation')
         time.sleep(5)
         self.function.create()
+        self.add_event_sources()
 
     def deploy(self):
         if self.policy:

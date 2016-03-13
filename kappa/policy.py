@@ -23,34 +23,32 @@ LOG = logging.getLogger(__name__)
 
 class Policy(object):
 
-    def __init__(self, context, config):
-        self._context = context
-        self._config = config
-        self._iam_client = kappa.awsclient.create_client(
-            'iam', self._context.session)
-        self._arn = self._config['policy'].get('arn', None)
+    _path_prefix = '/kappa/'
 
-    @property
-    def environment(self):
-        return self._context.environment
+    def __init__(self, context, config):
+        self.context = context
+        self.config = config
+        self._iam_client = kappa.awsclient.create_client(
+            'iam', self.context.session)
+        self._arn = self.config['policy'].get('arn', None)
 
     @property
     def name(self):
-        return '{}_{}'.format(self._context.name, self.environment)
+        return '{}_{}'.format(self.context.name, self.context.environment)
 
     @property
     def description(self):
         return 'A kappa policy to control access to {} resources'.format(
-            self.environment)
+            self.context.environment)
 
     def document(self):
-        if ('resources' not in self._config['policy'] and
-                'statements' not in self._config['policy']):
+        if ('resources' not in self.config['policy'] and
+                'statements' not in self.config['policy']):
             return None
-        document = {"Version": "2012-10-17"}
+        document = {'Version': '2012-10-17'}
         statements = []
         document['Statement'] = statements
-        for resource in self._config['policy']['resources']:
+        for resource in self.config['policy']['resources']:
             arn = resource['arn']
             _, _, service, _ = arn.split(':', 3)
             statement = {"Effect": "Allow",
@@ -60,13 +58,9 @@ class Policy(object):
                 actions.append("{}:{}".format(service, action))
             statement['Action'] = actions
             statements.append(statement)
-        for statement in self._config['policy'].get('statements', []):
+        for statement in self.config['policy'].get('statements', []):
             statements.append(statement)
         return json.dumps(document, indent=2, sort_keys=True)
-
-    @property
-    def path(self):
-        return self._config.get('path', '/kappa/')
 
     @property
     def arn(self):
@@ -79,7 +73,7 @@ class Policy(object):
     def _find_all_policies(self):
         try:
             response = self._iam_client.call(
-                'list_policies', PathPrefix=self.path)
+                'list_policies', PathPrefix=self._path_prefix)
         except Exception:
             LOG.exception('Error listing policies')
             response = {}
@@ -130,11 +124,11 @@ class Policy(object):
         m = hashlib.md5()
         m.update(document.encode('utf-8'))
         policy_md5 = m.hexdigest()
-        cached_md5 = self._context.get_cache_value('policy_md5')
+        cached_md5 = self.context.get_cache_value('policy_md5')
         LOG.debug('policy_md5: %s', policy_md5)
         LOG.debug('cached md5: %s', cached_md5)
         if policy_md5 != cached_md5:
-            self._context.set_cache_value('policy_md5', policy_md5)
+            self.context.set_cache_value('policy_md5', policy_md5)
             return True
         return False
 
@@ -156,7 +150,7 @@ class Policy(object):
             try:
                 response = self._iam_client.call(
                     'create_policy',
-                    Path=self.path, PolicyName=self.name,
+                    Path=self._path_prefix, PolicyName=self.name,
                     PolicyDocument=document,
                     Description=self.description)
                 LOG.debug(response)

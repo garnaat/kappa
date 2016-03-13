@@ -33,7 +33,7 @@ class EventSource(object):
 
     @property
     def starting_position(self):
-        return self._config.get('starting_position', 'TRIM_HORIZON')
+        return self._config.get('starting_position', 'LATEST')
 
     @property
     def batch_size(self):
@@ -41,7 +41,7 @@ class EventSource(object):
 
     @property
     def enabled(self):
-        return self._config.get('enabled', True)
+        return self._config.get('enabled', False)
 
 
 class KinesisEventSource(EventSource):
@@ -161,7 +161,7 @@ class S3EventSource(EventSource):
 
     def add(self, function):
         notification_spec = {
-            'LambdaFunctionConfigurations':[
+            'LambdaFunctionConfigurations': [
                 {
                     'Id': self._make_notification_id(function.name),
                     'Events': [e for e in self._config['events']],

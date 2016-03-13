@@ -57,7 +57,7 @@ class Function(object):
     @property
     def dependencies(self):
         return self._config.get('dependencies', list())
-    
+
     @property
     def description(self):
         return self._config['description']
@@ -69,6 +69,18 @@ class Function(object):
     @property
     def memory_size(self):
         return self._config['memory_size']
+
+    @property
+    def vpc_config(self):
+        vpc_config = {}
+        if 'vpc_config' in self._config:
+            if 'security_group_ids' in self._config['vpc_config']:
+                sgids = self._config['vpc_config']['security_group_ids']
+                vpc_config['SecurityGroupIds'] = ','.join(sgids)
+            if 'subnet_ids' in self._config['vpc_config']:
+                snids = self._config['vpc_config']['subnet_ids']
+                vpc_config['SubnetIds'] = ','.join(snids)
+        return vpc_config
 
     @property
     def zipfile_name(self):
@@ -372,6 +384,7 @@ class Function(object):
                         Description=self.description,
                         Timeout=self.timeout,
                         MemorySize=self.memory_size,
+                        VpcConfig=self.vpc_config,
                         Publish=True)
                     LOG.debug(response)
                     description = 'For stage {}'.format(
@@ -418,6 +431,7 @@ class Function(object):
                 response = self._lambda_client.call(
                     'update_function_configuration',
                     FunctionName=self.name,
+                    VpcConfig=self.vpc_config,
                     Role=exec_role,
                     Handler=self.handler,
                     Description=self.description,

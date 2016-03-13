@@ -31,7 +31,8 @@ deploy
 
 The ``deploy`` command does whatever is required to deploy the
 current version of your Lambda function such as creating/updating policies and
-roles and creating or updating the function itself.
+roles, creating or updating the function itself, and adding any event sources
+specified in your config file.
 
 When the command is run the first time, it creates all of the relevant
 resources required.  On subsequent invocations, it will attempt to determine
@@ -49,6 +50,10 @@ invoke
 The ``invoke`` command makes a synchronous call to your Lambda function,
 passing test data and display the resulting log data and any response returned
 from your Lambda function.
+
+The ``invoke`` command takes one positional argument, the ``data_file``.  This
+should be the path to a JSON data file that will be sent to the function as
+data.
   
 tag
 ---
@@ -84,9 +89,10 @@ event_sources
 -------------
 
 The ``event_sources`` command provides access the commands available for
-dealing with event sources.  This command has an additional option:
+dealing with event sources.  This command takes an additional positional
+argument, ``command``.
 
-* --command - the command to run (add|update|enable|disable)
+* command - the command to run (list|enable|disable)
 
 status
 ------

@@ -139,20 +139,19 @@ def delete(ctx):
 
 
 @cli.command()
-@click.option(
-    '--command',
-    type=click.Choice(['add', 'update', 'enable', 'disable']),
-    help='Operation to perform on event sources')
+@click.argument('command',
+                type=click.Choice(['list', 'enable', 'disable']))
 @pass_ctx
 def event_sources(ctx, command):
-    """Add any event sources specified in the config file"""
-    if command == 'add':
-        click.echo('adding event sources')
-        ctx.add_event_sources()
-        click.echo('done')
-    elif command == 'update':
-        click.echo('updating event sources')
-        ctx.update_event_sources()
+    """List, enable, and disable event sources specified in the config file"""
+    if command == 'list':
+        click.echo('listing event sources')
+        event_sources = ctx.list_event_sources()
+        for es in event_sources:
+            click.echo('arn: {}'.format(es['arn']))
+            click.echo('starting position: {}'.format(es['starting_position']))
+            click.echo('batch size: {}'.format(es['batch_size']))
+            click.echo('enabled: {}'.format(es['enabled']))
         click.echo('done')
     elif command == 'enable':
         click.echo('enabling event sources')
