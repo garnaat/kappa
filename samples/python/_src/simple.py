@@ -42,10 +42,10 @@ def _post(event, context):
 
 def _put(event, context):
     data = _get(event, context)
-    id = data.get('id')
+    id_ = data.get('id')
     data.update(event['json_body'])
     # don't allow the id to be changed
-    data['id'] = id
+    data['id'] = id_
     table.put_item(Item=data)
     return data
 

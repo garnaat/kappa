@@ -189,7 +189,7 @@ class RestApi(object):
     def create_methods(self):
         resource_config = self._config['resource']
         for method in resource_config.get('methods', dict()):
-            if not self.method_exists():
+            if not self.method_exists(method):
                 method_config = resource_config['methods'][method]
                 self.create_method(method, method_config)
 
@@ -253,7 +253,7 @@ class RestApi(object):
                 resourceId=self.resource_id)
             LOG.debug(response)
         except ClientError:
-            LOG.exception('Unable to delete resource ', self.resource_name)
+            LOG.exception('Unable to delete resource %s', self.resource_name)
         return response
 
     def status(self):
