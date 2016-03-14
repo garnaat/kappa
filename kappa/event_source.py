@@ -81,7 +81,7 @@ class KinesisEventSource(EventSource):
         try:
             response = self._lambda.call(
                 'update_event_source_mapping',
-                FunctionName=function.name,
+                UUID=self._get_uuid(function),
                 Enabled=self.enabled
             )
             LOG.debug(response)
@@ -242,6 +242,8 @@ class SNSEventSource(EventSource):
         except Exception:
             LOG.exception('Unable to add SNS event source')
 
+    enable = add
+
     def update(self, function):
         self.add(function)
 
@@ -257,6 +259,11 @@ class SNSEventSource(EventSource):
         except Exception:
             LOG.exception('Unable to remove event source %s', self.arn)
 
+    disable = remove
+
     def status(self, function):
         LOG.debug('status for SNS notification for %s', function.name)
-        return self.exists(function)
+        status = self.exists(function)
+        if status:
+            status['EventSourceArn'] = status['TopicArn']
+        return status
