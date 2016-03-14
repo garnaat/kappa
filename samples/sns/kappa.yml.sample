@@ -1,0 +1,23 @@
+---
+name: kappa-sns-sample
+environments:
+  dev:
+    # Change the profile and region to suit your application
+    profile: <your profile name>
+    region: <your region name>
+    policy:
+      resources:
+        - arn: <arn to your SNS topic>
+          actions:
+            - "*"
+        - arn: arn:aws:logs:*:*:*
+          actions:
+            - "*"
+    event_sources:
+      - arn: <arn to your SNS topic>
+lambda:    
+  description: A simple SNS example
+  handler: sns.handler
+  runtime: python2.7
+  memory_size: 128
+  timeout: 3

@@ -122,8 +122,9 @@ def status(ctx):
     if status['event_sources']:
         for event_source in status['event_sources']:
             if event_source:
-                line = '    {}: {}'.format(
-                    event_source['EventSourceArn'], event_source['State'])
+                arn = event_source.get('EventSourceArn')
+                state = event_source.get('State', 'Enabled')
+                line = '    {}: {}'.format(arn, state)
                 click.echo(click.style(line, fg='green'))
             else:
                 click.echo(click.style('    None', fg='green'))
