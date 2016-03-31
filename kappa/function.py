@@ -395,6 +395,9 @@ class Function(object):
                     if 'InvalidParameterValueException' in str(e):
                         LOG.debug('Role is not ready, waiting')
                         time.sleep(2)
+                    else:
+                        LOG.debug(str(e))
+                        ready = True
                 except Exception:
                     LOG.exception('Unable to upload zip file')
                     ready = True
