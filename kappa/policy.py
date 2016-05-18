@@ -48,7 +48,7 @@ class Policy(object):
         document = {'Version': '2012-10-17'}
         statements = []
         document['Statement'] = statements
-        for resource in self.config['policy']['resources']:
+        for resource in self.config['policy'].get('resources', []):
             arn = resource['arn']
             _, _, service, _ = arn.split(':', 3)
             statement = {"Effect": "Allow",
