@@ -179,6 +179,8 @@ class S3EventSource(EventSource):
             LOG.debug(exc.response)
             LOG.exception('Unable to add S3 event source')
 
+    enable = add
+
     def update(self, function):
         self.add(function)
 
@@ -198,6 +200,8 @@ class S3EventSource(EventSource):
                     Bucket=self._get_bucket_name(),
                     NotificationConfiguration=response)
                 LOG.debug(response)
+
+    disable = remove
 
     def status(self, function):
         LOG.debug('status for s3 notification for %s', function.name)
