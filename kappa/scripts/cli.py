@@ -159,6 +159,6 @@ def event_sources(ctx, command):
         ctx.enable_event_sources()
         click.echo('done')
     elif command == 'disable':
-        click.echo('enabling event sources')
+        click.echo('disabling event sources')
         ctx.disable_event_sources()
         click.echo('done')
