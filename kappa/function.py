@@ -190,6 +190,7 @@ class Function(object):
         m.update(str(self.memory_size).encode('utf-8'))
         m.update(self._context.exec_role_arn.encode('utf-8'))
         m.update(str(self.timeout).encode('utf-8'))
+        m.update(str(self.vpc_config).encode('utf-8'))
         config_md5 = m.hexdigest()
         cached_md5 = self._context.get_cache_value('config_md5')
         LOG.debug('config_md5: %s', config_md5)
