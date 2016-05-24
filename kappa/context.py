@@ -202,7 +202,7 @@ class Context(object):
 
     def disable_event_sources(self):
         for event_source in self.event_sources:
-            event_source.enable(self.function)
+            event_source.disable(self.function)
 
     def create(self):
         if self.policy:
