@@ -77,7 +77,7 @@ Within the directory we see:
 The first step is to make a copy of the sample configuration file:
 
     $ cd simple
-    $ cp kappa.yml.simple kappa.yml
+    $ cp kappa.yml.sample kappa.yml
 
 Now you will need to edit ``kappa.yml`` slightly for your use.  The file looks
 like this:
