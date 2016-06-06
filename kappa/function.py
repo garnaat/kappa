@@ -76,10 +76,10 @@ class Function(object):
         if 'vpc_config' in self._config:
             if 'security_group_ids' in self._config['vpc_config']:
                 sgids = self._config['vpc_config']['security_group_ids']
-                vpc_config['SecurityGroupIds'] = ','.join(sgids)
+                vpc_config['SecurityGroupIds'] = sgids
             if 'subnet_ids' in self._config['vpc_config']:
                 snids = self._config['vpc_config']['subnet_ids']
-                vpc_config['SubnetIds'] = ','.join(snids)
+                vpc_config['SubnetIds'] = snids
         return vpc_config
 
     @property
