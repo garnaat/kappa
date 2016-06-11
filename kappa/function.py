@@ -28,12 +28,156 @@ import kappa.log
 
 LOG = logging.getLogger(__name__)
 
+class S3Code(object):
 
-class Function(object):
+    def __init__(self, code):
+        self._code = code
+
+    def prepare(self):
+        pass
+
+    def modified(self):
+        return True
+
+    def lambda_call(self, lambda_client, op_name, **kwargs):
+        code_params = {
+            'S3Bucket': self._code['bucket'],
+            'S3Key': self._code['key']
+        }
+        if 'version' in self._code:
+            code_params['S3ObjectVersion'] = self._code['version']
+
+        if op_name == 'create_function':
+            kwargs['Code'] = code_params
+        else:
+            kwargs.update(code_params)
+
+        LOG.info('using S3 code bucket: %s key: %s version: %s' % \
+                 (code_params['S3Bucket'], code_params['S3Key'],
+                  code_params.get('S3ObjectVersion')))
+        return lambda_client.call(op_name, **kwargs)
+
+class ZipCode(object):
 
     excluded_dirs = ['boto3', 'botocore', 'concurrent', 'dateutil',
                      'docutils', 'futures', 'jmespath', 'python_dateutil']
     excluded_files = ['.gitignore']
+
+    def __init__(self, context, dependencies):
+        self._context = context
+        self._dependencies = dependencies
+        self._modified = False
+
+    def prepare(self):
+        self._modified = self._check_function_md5()
+
+    def modified(self):
+        return self._modified
+
+    def lambda_call(self, lambda_client, op_name, **kwargs):
+        with open(self.zipfile_name, 'rb') as fp:
+            LOG.info('uploading new function zipfile %s', self.zipfile_name)
+            if op_name == 'create_function':
+                kwargs['Code'] = {'ZipFile': fp.read()}
+            else:
+                kwargs['ZipFile'] = fp.read()
+            return lambda_client.call(op_name, **kwargs)
+
+    @property
+    def zipfile_name(self):
+        return '{}.zip'.format(self._context.name)
+
+    def _check_function_md5(self):
+        # Zip up the source code and then compute the MD5 of that.
+        # If the MD5 does not match the cached MD5, the function has
+        # changed and needs to be updated so return True.
+        changed = True
+        self._copy_config_file()
+        files = [] + self._dependencies + [self._context.source_dir]
+        self._zip_lambda_function(self.zipfile_name, files)
+        m = hashlib.md5()
+        with open(self.zipfile_name, 'rb') as fp:
+            m.update(fp.read())
+        zip_md5 = m.hexdigest()
+        cached_md5 = self._context.get_cache_value('zip_md5')
+        LOG.debug('zip_md5: %s', zip_md5)
+        LOG.debug('cached md5: %s', cached_md5)
+        if zip_md5 != cached_md5:
+            self._context.set_cache_value('zip_md5', zip_md5)
+        else:
+            changed = False
+            LOG.info('function unchanged')
+        return changed
+
+    def _copy_config_file(self):
+        config_name = '{}_config.json'.format(self._context.environment)
+        config_path = os.path.join(self._context.source_dir, config_name)
+        if os.path.exists(config_path):
+            dest_path = os.path.join(self._context.source_dir, 'config.json')
+            LOG.debug('copy %s to %s', config_path, dest_path)
+            shutil.copy2(config_path, dest_path)
+
+    def _zip_lambda_dir(self, zipfile_name, lambda_dir):
+        LOG.debug('_zip_lambda_dir: lambda_dir=%s', lambda_dir)
+        LOG.debug('zipfile_name=%s', zipfile_name)
+        relroot = os.path.abspath(lambda_dir)
+        with zipfile.ZipFile(zipfile_name, 'a',
+                             compression=zipfile.ZIP_DEFLATED) as zf:
+            for root, subdirs, files in os.walk(lambda_dir):
+                excluded_dirs = []
+                for subdir in subdirs:
+                    for excluded in self.excluded_dirs:
+                        if subdir.startswith(excluded):
+                            excluded_dirs.append(subdir)
+                for excluded in excluded_dirs:
+                    subdirs.remove(excluded)
+
+                try:
+                    dir_path = os.path.relpath(root, relroot)
+                    dir_path = os.path.normpath(
+                        os.path.splitdrive(dir_path)[1]
+                    )
+                    while dir_path[0] in (os.sep, os.altsep):
+                        dir_path = dir_path[1:]
+                    dir_path += '/'
+                    zf.getinfo(dir_path)
+                except KeyError:
+                    zf.write(root, dir_path)
+
+                for filename in files:
+                    if filename not in self.excluded_files:
+                        filepath = os.path.join(root, filename)
+                        if os.path.isfile(filepath):
+                            arcname = os.path.join(
+                                os.path.relpath(root, relroot), filename)
+                            try:
+                                zf.getinfo(arcname)
+                            except KeyError:
+                                zf.write(filepath, arcname)
+
+    def _zip_lambda_file(self, zipfile_name, lambda_file):
+        LOG.debug('_zip_lambda_file: lambda_file=%s', lambda_file)
+        LOG.debug('zipfile_name=%s', zipfile_name)
+        with zipfile.ZipFile(zipfile_name, 'a',
+                             compression=zipfile.ZIP_DEFLATED) as zf:
+            try:
+                zf.getinfo(lambda_file)
+            except KeyError:
+                zf.write(lambda_file)
+
+    def _zip_lambda_function(self, zipfile_name, files):
+        try:
+            os.remove(zipfile_name)
+        except OSError:
+            pass
+        for f in files:
+            LOG.debug('adding file %s', f)
+            if os.path.isdir(f):
+                self._zip_lambda_dir(zipfile_name, f)
+            else:
+                self._zip_lambda_file(zipfile_name, f)
+
+class Function(object):
 
     def __init__(self, context, config):
         self._context = context
@@ -42,6 +186,10 @@ class Function(object):
             'lambda', context.session)
         self._response = None
         self._log = None
+        if 'code' in config:
+            self._code = S3Code(config['code'])
+        else:
+            self._code = ZipCode(context, self.dependencies)
 
     @property
     def name(self):
@@ -82,10 +230,6 @@ class Function(object):
                 snids = self._config['vpc_config']['subnet_ids']
                 vpc_config['SubnetIds'] = snids
         return vpc_config
-
-    @property
-    def zipfile_name(self):
-        return '{}.zip'.format(self._context.name)
 
     @property
     def tests(self):
@@ -159,28 +303,6 @@ class Function(object):
                 value = response['Configuration'].get(key, default)
         return value
 
-    def _check_function_md5(self):
-        # Zip up the source code and then compute the MD5 of that.
-        # If the MD5 does not match the cached MD5, the function has
-        # changed and needs to be updated so return True.
-        changed = True
-        self._copy_config_file()
-        files = [] + self.dependencies + [self._context.source_dir]
-        self.zip_lambda_function(self.zipfile_name, files)
-        m = hashlib.md5()
-        with open(self.zipfile_name, 'rb') as fp:
-            m.update(fp.read())
-        zip_md5 = m.hexdigest()
-        cached_md5 = self._context.get_cache_value('zip_md5')
-        LOG.debug('zip_md5: %s', zip_md5)
-        LOG.debug('cached md5: %s', cached_md5)
-        if zip_md5 != cached_md5:
-            self._context.set_cache_value('zip_md5', zip_md5)
-        else:
-            changed = False
-            LOG.info('function unchanged')
-        return changed
-
     def _check_config_md5(self):
         # Compute the MD5 of all of the components of the configuration.
         # If the MD5 does not match the cached MD5, the configuration has
@@ -202,74 +324,6 @@ class Function(object):
         else:
             changed = False
         return changed
-
-    def _copy_config_file(self):
-        config_name = '{}_config.json'.format(self._context.environment)
-        config_path = os.path.join(self._context.source_dir, config_name)
-        if os.path.exists(config_path):
-            dest_path = os.path.join(self._context.source_dir, 'config.json')
-            LOG.debug('copy %s to %s', config_path, dest_path)
-            shutil.copy2(config_path, dest_path)
-
-    def _zip_lambda_dir(self, zipfile_name, lambda_dir):
-        LOG.debug('_zip_lambda_dir: lambda_dir=%s', lambda_dir)
-        LOG.debug('zipfile_name=%s', zipfile_name)
-        relroot = os.path.abspath(lambda_dir)
-        with zipfile.ZipFile(zipfile_name, 'a',
-                             compression=zipfile.ZIP_DEFLATED) as zf:
-            for root, subdirs, files in os.walk(lambda_dir):
-                excluded_dirs = []
-                for subdir in subdirs:
-                    for excluded in self.excluded_dirs:
-                        if subdir.startswith(excluded):
-                            excluded_dirs.append(subdir)
-                for excluded in excluded_dirs:
-                    subdirs.remove(excluded)
-
-                try:
-                    dir_path = os.path.relpath(root, relroot)
-                    dir_path = os.path.normpath(
-                        os.path.splitdrive(dir_path)[1]
-                    )
-                    while dir_path[0] in (os.sep, os.altsep):
-                        dir_path = dir_path[1:]
-                    dir_path += '/'
-                    zf.getinfo(dir_path)
-                except KeyError:
-                    zf.write(root, dir_path)
-
-                for filename in files:
-                    if filename not in self.excluded_files:
-                        filepath = os.path.join(root, filename)
-                        if os.path.isfile(filepath):
-                            arcname = os.path.join(
-                                os.path.relpath(root, relroot), filename)
-                            try:
-                                zf.getinfo(arcname)
-                            except KeyError:
-                                zf.write(filepath, arcname)
-
-    def _zip_lambda_file(self, zipfile_name, lambda_file):
-        LOG.debug('_zip_lambda_file: lambda_file=%s', lambda_file)
-        LOG.debug('zipfile_name=%s', zipfile_name)
-        with zipfile.ZipFile(zipfile_name, 'a',
-                             compression=zipfile.ZIP_DEFLATED) as zf:
-            try:
-                zf.getinfo(lambda_file)
-            except KeyError:
-                zf.write(lambda_file)
-
-    def zip_lambda_function(self, zipfile_name, files):
-        try:
-            os.remove(zipfile_name)
-        except OSError:
-            pass
-        for f in files:
-            LOG.debug('adding file %s', f)
-            if os.path.isdir(f):
-                self._zip_lambda_dir(zipfile_name, f)
-            else:
-                self._zip_lambda_file(zipfile_name, f)
 
     def exists(self):
         return self._get_response()
@@ -374,66 +428,57 @@ class Function(object):
 
     def create(self):
         LOG.info('creating function %s', self.name)
-        self._check_function_md5()
+        self._code.prepare()
         self._check_config_md5()
         # There is a consistency problem here.
         # Sometimes the role is not ready to be used by the function.
         ready = False
         while not ready:
-            with open(self.zipfile_name, 'rb') as fp:
-                exec_role = self._context.exec_role_arn
-                LOG.debug('exec_role=%s', exec_role)
-                try:
-                    zipdata = fp.read()
-                    response = self._lambda_client.call(
-                        'create_function',
-                        FunctionName=self.name,
-                        Code={'ZipFile': zipdata},
-                        Runtime=self.runtime,
-                        Role=exec_role,
-                        Handler=self.handler,
-                        Description=self.description,
-                        Timeout=self.timeout,
-                        MemorySize=self.memory_size,
-                        VpcConfig=self.vpc_config,
-                        Publish=True)
-                    LOG.debug(response)
-                    description = 'For stage {}'.format(
-                        self._context.environment)
-                    self.create_alias(self._context.environment, description)
+            exec_role = self._context.exec_role_arn
+            LOG.debug('exec_role=%s', exec_role)
+            try:
+                response = self._code.lambda_call(self._lambda_client,
+                                                  'create_function',
+                                                  FunctionName=self.name,
+                                                  Runtime=self.runtime,
+                                                  Role=exec_role,
+                                                  Handler=self.handler,
+                                                  Description=self.description,
+                                                  Timeout=self.timeout,
+                                                  MemorySize=self.memory_size,
+                                                  VpcConfig=self.vpc_config,
+                                                  Publish=True)
+                LOG.debug(response)
+                description = 'For stage {}'.format(self._context.environment)
+                self.create_alias(self._context.environment, description)
+                ready = True
+            except ClientError as e:
+                if 'InvalidParameterValueException' in str(e):
+                    LOG.debug('Role is not ready, waiting')
+                    time.sleep(2)
+                else:
+                    LOG.debug(str(e))
                     ready = True
-                except ClientError as e:
-                    if 'InvalidParameterValueException' in str(e):
-                        LOG.debug('Role is not ready, waiting')
-                        time.sleep(2)
-                    else:
-                        LOG.debug(str(e))
-                        ready = True
-                except Exception:
-                    LOG.exception('Unable to upload zip file')
-                    ready = True
+            except Exception:
+                LOG.exception('Unable to create function')
+                ready = True
         self.add_permissions()
 
     def update(self):
         LOG.info('updating function %s', self.name)
-        if self._check_function_md5():
+        self._code.prepare()
+        if self._code.modified():
             self._response = None
-            with open(self.zipfile_name, 'rb') as fp:
-                try:
-                    LOG.info('uploading new function zipfile %s',
-                             self.zipfile_name)
-                    zipdata = fp.read()
-                    response = self._lambda_client.call(
-                        'update_function_code',
-                        FunctionName=self.name,
-                        ZipFile=zipdata,
-                        Publish=True)
-                    LOG.debug(response)
-                    self.update_alias(
-                        self._context.environment,
-                        'For the {} stage'.format(self._context.environment))
-                except Exception:
-                    LOG.exception('unable to update zip file')
+            try:
+                response = self._code.lambda_call(self._lambda_client,
+                                                  'update_function_code',
+                                                  FunctionName=self.name,
+                                                  Publish=True)
+                LOG.debug(response)
+                self.update_alias(self._context.environment,
+                    'For the {} stage'.format(self._context.environment))
+            except Exception:
+                LOG.exception('unable to update function')
 
     def update_configuration(self):
         if self._check_config_md5():
