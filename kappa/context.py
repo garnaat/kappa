@@ -177,7 +177,8 @@ class Context(object):
             return
 
         event_source_map = {
-            'dynamodb': kappa.event_source.dynamodb_stream.DynamoDBStreamEventSource,
+            'dynamodb':
+            kappa.event_source.dynamodb_stream.DynamoDBStreamEventSource,
             'kinesis': kappa.event_source.kinesis.KinesisEventSource,
             's3': kappa.event_source.s3.S3EventSource,
             'sns': kappa.event_source.sns.SNSEventSource,
