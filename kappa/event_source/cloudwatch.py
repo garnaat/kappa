@@ -109,5 +109,4 @@ class CloudWatchEventSource(kappa.event_source.base.EventSource):
                 'EventSourceArn': rule['Arn'],
                 'State': rule['State']
             }
-        else:
-            return None
+        return None
