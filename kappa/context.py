@@ -26,6 +26,7 @@ import kappa.event_source.dynamodb_stream
 import kappa.event_source.kinesis
 import kappa.event_source.s3
 import kappa.event_source.sns
+import kappa.event_source.cloudwatch
 import kappa.policy
 import kappa.role
 import kappa.awsclient
@@ -181,6 +182,7 @@ class Context(object):
             'kinesis': kappa.event_source.kinesis.KinesisEventSource,
             's3': kappa.event_source.s3.S3EventSource,
             'sns': kappa.event_source.sns.SNSEventSource,
+            'events': kappa.event_source.cloudwatch.CloudWatchEventSource
         }
         for event_source_cfg in event_sources:
             _, _, svc, _ = event_source_cfg['arn'].split(':', 3)
@@ -226,7 +228,7 @@ class Context(object):
         # There is a consistency problem here.
         # If you don't wait for a bit, the function.create call
         # will fail because the policy has not been attached to the role.
-        LOG.debug('Waiting for policy/role propogation')
+        LOG.debug('Waiting for policy/role propagation')
         time.sleep(5)
         self.function.create()
         self.add_event_sources()
@@ -239,6 +241,7 @@ class Context(object):
         self.function.deploy()
         if self.restapi:
             self.restapi.deploy()
+        self.add_event_sources()
 
     def invoke(self, data):
         return self.function.invoke(data)
