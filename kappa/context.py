@@ -21,7 +21,10 @@ import shutil
 
 import kappa.function
 import kappa.restapi
-import kappa.event_source
+import kappa.event_source.dynamodb_stream as dynamodb_stream
+import kappa.event_source.kinesis as kinesis
+import kappa.event_source.s3 as s3
+import kappa.event_source.sns as sns
 import kappa.policy
 import kappa.role
 import kappa.awsclient
@@ -159,23 +162,23 @@ class Context(object):
     def _create_event_sources(self):
         env_cfg = self.config['environments'][self.environment]
         if 'event_sources' in env_cfg:
-            for event_source_cfg in env_cfg['event_sources']:
+            event_sources = env_cfg.get('event_sources', {})
+            if not event_sources:
+                return
+            for event_source_cfg in event_sources:
                 _, _, svc, _ = event_source_cfg['arn'].split(':', 3)
                 if svc == 'kinesis':
                     self.event_sources.append(
-                        kappa.event_source.KinesisEventSource(
-                            self, event_source_cfg))
+                        kinesis.KinesisEventSource(self, event_source_cfg))
                 elif svc == 's3':
-                    self.event_sources.append(kappa.event_source.S3EventSource(
-                        self, event_source_cfg))
+                    self.event_sources.append(
+                        s3.S3EventSource(self, event_source_cfg))
                 elif svc == 'sns':
                     self.event_sources.append(
-                        kappa.event_source.SNSEventSource(
-                            self, event_source_cfg))
+                        sns.SNSEventSource(self, event_source_cfg))
                 elif svc == 'dynamodb':
                     self.event_sources.append(
-                        kappa.event_source.DynamoDBStreamEventSource(
-                            self, event_source_cfg))
+                        dynamodb_stream.DynamoDBStreamEventSource(self, event_source_cfg))
                 else:
                     msg = 'Unknown event source: %s' % event_source_cfg['arn']
                     raise ValueError(msg)
