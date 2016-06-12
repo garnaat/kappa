@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.4.1 (2016-06-12)
+------------------
+
+- Add utf-8 encoding to each python file. [Jose Diaz-Gonzalez]
+
 0.4.0 (2016-06-12)
 ------------------
 
