@@ -53,17 +53,17 @@ class Log(object):
             LOG.info(
                 'log group %s has not been created yet', self.log_group_name)
             return []
-        latest_stream = None
+        latest = None
         streams = self.streams()
         for stream in streams:
-            if not latest_stream:
-                latest_stream = stream
-            elif stream['lastEventTimestamp'] > latest_stream['lastEventTimestamp']:
-                latest_stream = stream
+            if not latest:
+                latest = stream
+            elif stream['lastEventTimestamp'] > latest['lastEventTimestamp']:
+                latest = stream
         response = self._log_client.call(
             'get_log_events',
             logGroupName=self.log_group_name,
-            logStreamName=latest_stream['logStreamName'])
+            logStreamName=latest['logStreamName'])
         LOG.debug(response)
         return response['events']
 

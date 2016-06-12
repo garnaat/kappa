@@ -88,7 +88,7 @@ def tail(ctx):
     """Show the last 10 lines of the log file"""
     click.echo('tailing logs')
     for e in ctx.tail()[-10:]:
-        ts = datetime.utcfromtimestamp(e['timestamp']//1000).isoformat()
+        ts = datetime.utcfromtimestamp(e['timestamp'] // 1000).isoformat()
         click.echo("{}: {}".format(ts, e['message']))
     click.echo('done')
 

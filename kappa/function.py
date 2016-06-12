@@ -224,10 +224,12 @@ class Function(object):
                             excluded_dirs.append(subdir)
                 for excluded in excluded_dirs:
                     subdirs.remove(excluded)
-                
+
                 try:
                     dir_path = os.path.relpath(root, relroot)
-                    dir_path = os.path.normpath(os.path.splitdrive(dir_path)[1])
+                    dir_path = os.path.normpath(
+                        os.path.splitdrive(dir_path)[1]
+                    )
                     while dir_path[0] in (os.sep, os.altsep):
                         dir_path = dir_path[1:]
                     dir_path += '/'
@@ -251,7 +253,7 @@ class Function(object):
         LOG.debug('zipfile_name=%s', zipfile_name)
         with zipfile.ZipFile(zipfile_name, 'a',
                              compression=zipfile.ZIP_DEFLATED) as zf:
-            try: 
+            try:
                 zf.getinfo(lambda_file)
             except KeyError:
                 zf.write(lambda_file)

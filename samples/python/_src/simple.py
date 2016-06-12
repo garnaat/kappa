@@ -21,6 +21,7 @@ def foobar():
 
 
 def _get(event, context):
+    assert context
     customer_id = event.get('id')
     if customer_id is None:
         raise Exception('No id provided for GET operation')
@@ -32,6 +33,7 @@ def _get(event, context):
 
 
 def _post(event, context):
+    assert context
     item = event['json_body']
     if item is None:
         raise Exception('No json_body found in event')
@@ -41,6 +43,7 @@ def _post(event, context):
 
 
 def _put(event, context):
+    assert context
     data = _get(event, context)
     id_ = data.get('id')
     data.update(event['json_body'])
@@ -51,6 +54,7 @@ def _put(event, context):
 
 
 def handler(event, context):
+    assert context
     LOG.info(event)
     http_method = event.get('http_method')
     if not http_method:

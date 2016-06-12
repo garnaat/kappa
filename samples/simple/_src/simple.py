@@ -5,5 +5,6 @@ LOG.setLevel(logging.DEBUG)
 
 
 def handler(event, context):
+    assert context
     LOG.debug(event)
     return {'status': 'success'}
