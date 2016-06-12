@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2014 Mitch Garnaat http://garnaat.org/
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
