@@ -16,7 +16,7 @@ setup(
     name='kappa',
     version=open(os.path.join('kappa', '_version')).read().strip(),
     description='A CLI tool for AWS Lambda developers',
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     author='Mitch Garnaat',
     author_email='mitch@garnaat.com',
     url='https://github.com/garnaat/kappa',
