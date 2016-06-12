@@ -1,0 +1,23 @@
+---
+name: kappa-cron
+environments:
+  dev:
+    profile: <your profile here>
+    region: <your region here>
+    policy:
+      resources:
+        - arn: arn:aws:logs:*:*:*
+          actions:
+          - "*"
+    event_sources:
+      - arn: arn:aws:events:<your region here>:<your account id>:rule/kappa-cron-dev
+        schedule: rate(1 minute)
+        description: cron to run this lambda function every minute
+        enabled: true
+lambda:    
+  description: Kappa sample lambda that runs every minute
+  handler: simple.handler
+  runtime: python2.7
+  memory_size: 128
+  timeout: 3
+  
