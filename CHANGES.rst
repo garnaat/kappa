@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.5.1 (2016-06-12)
+------------------
+
+- Fix exception catching. [Jose Diaz-Gonzalez]
+
 0.5.0 (2016-06-12)
 ------------------
 
