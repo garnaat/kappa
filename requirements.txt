@@ -1,4 +1,4 @@
-boto3>=1.2.3
-placebo>=0.8.1
-click>=5.1
 PyYAML>=3.11
+boto3>=1.2.3
+click>=5.1
+placebo>=0.8.1
