@@ -1,6 +1,17 @@
 Changelog
 =========
 
+0.5.0 (2016-06-12)
+------------------
+
+- Merge remote-tracking branch 'Miserlou/tailwait' [Jose Diaz-Gonzalez]
+
+- Well that was embarassing. Not sure how that happened. [Rich Jones]
+
+- Replace tabs with spaces.. my fault for cowboy coding.. [Rich Jones]
+
+- Fixes #23 - recursive tailing hur hur. [Rich Jones]
+
 0.4.1 (2016-06-12)
 ------------------
 
