@@ -18,6 +18,7 @@ import yaml
 import time
 import os
 import shutil
+import sys
 
 import kappa.function
 import kappa.restapi
@@ -48,6 +49,12 @@ class Context(object):
         self._load_cache()
         self.config = yaml.load(config_file)
         self.environment = environment
+
+        if self.environment not in self.config.get('environments', {}):
+            LOG.error('Invalid environment {0} specified'.format(
+                self.environment))
+            sys.exit(1)
+
         profile = self.config['environments'][self.environment]['profile']
         region = self.config['environments'][self.environment]['region']
         self.session = kappa.awsclient.create_session(profile, region)
