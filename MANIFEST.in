@@ -1,4 +1,4 @@
-include README.md
+include README.rst
 include LICENSE
 include requirements.txt
 recursive-include samples *.js *.py *.yml *.cf *.json *.txt
