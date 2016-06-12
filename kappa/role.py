@@ -38,11 +38,13 @@ class Role(object):
 
     Path = '/kappa/'
 
-    def __init__(self, context, config):
+    def __init__(self, context, config, iam_client=None):
         self._context = context
         self._config = config
-        self._iam_client = kappa.awsclient.create_client(
-            'iam', context.session)
+        self._iam_client = iam_client
+        if not iam_client:
+            self._iam_client = kappa.awsclient.create_client(
+                'iam', context.session)
         self._arn = None
 
     @property
@@ -62,7 +64,9 @@ class Role(object):
     def _get_role(self):
         try:
             response = self._iam_client.call('get_role', RoleName=self.name)
-            return response['Role']
+            if response and 'Role' in response:
+                response = response['Role']
+            return response
         except ClientError as e:
             if e.response['Error']['Code'] != 'NoSuchEntity':
                 LOG.exception('Error getting role')
