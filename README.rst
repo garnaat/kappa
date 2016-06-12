@@ -212,17 +212,18 @@ you check out the tutorial.
 Use Code from S3
 ================
 
-By default Kappa will create a zip file based on contents of `_src`, but it
+By default Kappa will create a zip file based on contents of ``_src``, but it
 is also possible to reference zip or jar files stored on S3.  This allows
 you to use a separate build tool to create your zip/jar, and also allows you
 to register multiple lambda functions that reference a single zip/jar without
-having to upload the file during each `kappa deploy` invocation.
+having to upload the file during each ``kappa deploy`` invocation.
 
-To reference a file on S3, add a `code` section under the `lambda` section:
+To reference a file on S3, add a ``code`` section under the ``lambda`` section:
 
 .. code-block:: yaml
 
     lambda:
+        # code block tells Kappa to reference file from S3 instead of zipping _src
         code:
             # bucket and key are required 
             bucket: my-bucket-name
@@ -236,8 +237,8 @@ To reference a file on S3, add a `code` section under the `lambda` section:
         memory_size: 128
         timeout: 10
 
-Note that if you specify a `code` block, Kappa will not create a `config.json` file
-during `deploy`.
+Note that if you specify a ``code`` block, Kappa will not create a ``config.json`` file
+during ``deploy``.
 
 Here's a full example of how you might use Maven, the AWS CLI, and Kappa to build
 and deploy a Java lambda project:
