@@ -12,6 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
-__version__ = open(os.path.join(os.path.dirname(__file__), '_version')).read()
+__version__ = '0.3.1'

@@ -1,5 +1,4 @@
 include README.md
 include LICENSE
 include requirements.txt
-include kappa/_version
 recursive-include samples *.js *.py *.yml *.cf *.json *.txt
