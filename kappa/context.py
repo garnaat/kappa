@@ -35,7 +35,7 @@ import placebo
 LOG = logging.getLogger(__name__)
 
 DebugFmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-InfoFmtString = '...%(message)s'
+InfoFmtString = '-> %(message)s'
 
 
 class Context(object):
