@@ -278,7 +278,7 @@ class Function(object):
         try:
             LOG.debug('tailing function: %s', self.name)
             return self.log.tail()
-        except Exception, e:
+        except Exception as e:
             if attempt > 10:
                 return e
 
