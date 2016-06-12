@@ -51,8 +51,9 @@ class Context(object):
         self.environment = environment
 
         if self.environment not in self.config.get('environments', {}):
-            LOG.error('Invalid environment {0} specified'.format(
-                self.environment))
+            message = 'Invalid environment {0} specified'.format(
+                self.environment)
+            LOG.error(message)
             sys.exit(1)
 
         profile = self.config['environments'][self.environment]['profile']
