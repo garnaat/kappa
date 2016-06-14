@@ -108,8 +108,8 @@ def status(ctx):
     click.echo(click.style('Role', bold=True))
     if status['role']:
         line = '    {} ({})'.format(
-            status['role']['Role']['RoleName'],
-            status['role']['Role']['Arn'])
+            status['role']['RoleName'],
+            status['role']['Arn'])
         click.echo(click.style(line, fg='green'))
     click.echo(click.style('Function', bold=True))
     if status['function']:

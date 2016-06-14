@@ -38,11 +38,13 @@ class Role(object):
 
     Path = '/kappa/'
 
-    def __init__(self, context, config):
+    def __init__(self, context, config, iam_client=None):
         self._context = context
         self._config = config
-        self._iam_client = kappa.awsclient.create_client(
-            'iam', context.session)
+        self._iam_client = iam_client
+        if not iam_client:
+            self._iam_client = kappa.awsclient.create_client(
+                'iam', context.session)
         self._arn = None
 
     @property
@@ -52,28 +54,28 @@ class Role(object):
     @property
     def arn(self):
         if self._arn is None:
-            try:
-                response = self._iam_client.call(
-                    'get_role', RoleName=self.name)
-                LOG.debug(response)
-                self._arn = response['Role']['Arn']
-            except Exception:
+            role = self._get_role()
+            if role:
+                self._arn = role['Arn']
+            else:
                 LOG.debug('Unable to find ARN for role: %s', self.name)
         return self._arn
 
-    def _find_all_roles(self):
+    def _get_role(self):
         try:
-            response = self._iam_client.call('list_roles')
+            response = self._iam_client.call('get_role', RoleName=self.name)
+            if response and 'Role' in response:
+                response = response['Role']
+            return response
+        except ClientError as e:
+            if e.response['Error']['Code'] != 'NoSuchEntity':
+                LOG.exception('Error getting role')
         except Exception:
-            LOG.exception('Error listing roles')
-            response = {}
-        return response.get('Roles', list())
+            LOG.exception('Error getting role')
+        return None
 
     def exists(self):
-        for role in self._find_all_roles():
-            if role['RoleName'] == self.name:
-                return role
-        return None
+        return self._get_role() is not None
 
     def create(self):
         LOG.info('creating role %s', self.name)
@@ -99,6 +101,10 @@ class Role(object):
 
     def delete(self):
         response = None
+        if not self.exists():
+            LOG.debug('role %s does not exist - skipping delete', self.name)
+            return response
+
         LOG.debug('deleting role %s', self.name)
         try:
             LOG.debug('First detach the policy from the role')
@@ -117,11 +123,7 @@ class Role(object):
 
     def status(self):
         LOG.debug('getting status for role %s', self.name)
-        try:
-            response = self._iam_client.call(
-                'get_role', RoleName=self.name)
-            LOG.debug(response)
-        except ClientError:
+        role = self._get_role()
+        if not role:
             LOG.debug('role %s not found', self.name)
-            response = None
-        return response
+        return role
