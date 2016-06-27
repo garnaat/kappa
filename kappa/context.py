@@ -97,7 +97,10 @@ class Context(object):
             yaml.dump(self.cache, fp)
 
     def get_cache_value(self, key):
-        return self.cache.setdefault(self.environment, dict()).get(key)
+        ret = self.cache.setdefault(self.environment, dict()).get(key)
+        if ret is not None:
+            return ret.decode('utf8')
+        return ret
 
     def set_cache_value(self, key, value):
         self.cache.setdefault(
