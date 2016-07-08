@@ -24,7 +24,7 @@ def run_setup():
         author='Mitch Garnaat',
         author_email='mitch@garnaat.com',
         license='Apache License 2.0',
-        packages=['kappa', 'kappa.scripts'],
+        packages=['kappa', 'kappa.scripts', 'kappa.event_source'],
         package_data={'kappa': ['_version']},
         package_dir={'kappa': 'kappa'},
         entry_points="""
