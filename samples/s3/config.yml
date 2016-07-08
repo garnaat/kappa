@@ -34,3 +34,8 @@ lambda:
       arn: arn:aws:s3:::test-1245812163
       events:
         - s3:ObjectCreated:*
+      key_filters:
+        - type: prefix
+          value: someprefix/
+        - type: suffix
+          value: .zip
