@@ -92,5 +92,8 @@ class S3EventSource(kappa.event_source.base.EventSource):
             Bucket=self._get_bucket_name())
         LOG.debug(response)
         if 'CloudFunctionConfiguration' not in response:
-            response = None
-        return response
+            return None
+        return {
+            'EventSourceArn': response['CloudFunctionConfiguration']['CloudFunction'],
+            'State': 'Enabled'
+        }
