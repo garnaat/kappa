@@ -11,8 +11,8 @@ Example
 
 Here is an example config file showing all possible sections.
 
-.. sourcecode:: yaml
-    :linenos:
+.. code:: yaml
+    :number-lines:
 
     ---
     name: kappa-python-sample
@@ -61,7 +61,7 @@ Here is an example config file showing all possible sections.
         subnet_ids:
           - subnet-12345678
           - subnet-23456789
-          
+
 
 Explanations:
 
