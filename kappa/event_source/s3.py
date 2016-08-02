@@ -37,7 +37,7 @@ class S3EventSource(kappa.event_source.base.EventSource):
                 {
                     'Id': self._make_notification_id(function.name),
                     'Events': [e for e in self._config['events']],
-                    'LambdaFunctionArn': '%s:%s' % (function.arn, function._context.environment),
+                    'LambdaFunctionArn': function.arn,
                 }
             ]
         }
