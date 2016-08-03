@@ -1,6 +1,79 @@
 Changelog
 =========
 
+0.6.0 (2016-08-03)
+------------------
+
+- Fix for the config file example. [Igor Serko]
+
+  Github doesn't seem to support `sourcecode` blocks ... instead they're
+  called `code`, see http://docutils.sourceforge.net/docs/ref/rst/directives.html#code
+
+
+- S3 Event Source Status fix. [Igor Serko]
+
+  The CLI expects to see `EventSourceArn` and `State` in the result from the `status` method in each event_source. This makes it work for the S3 event sources
+
+
+- 4-space indentation fix. [Matteo Sessa]
+
+- Add support for prefix/suffix filters on S3. [Matteo Sessa]
+
+- Include environment at lambda function qualifier. [Matteo Sessa]
+
+- Include datasources in distribution. [Matteo Sessa]
+
+- Fix #73. [LaiQiang Ding]
+
+- Cloudwatch: eliminate 'else' before return in _to_status. [James
+  Cooper]
+
+- Remove event_source.py - accidentally re-added when I rebased. [James
+  Cooper]
+
+- Add .gitignore to 'cron' sample. [James Cooper]
+
+- Added 'cron' sample to demo CloudWatch events. [James Cooper]
+
+- Add CloudWatchEventSource. [James Cooper]
+
+- Test_role.py: use string.printable instead of lowercase (fixes Python
+  3.x) [James Cooper]
+
+- Role.py: only strip 'Role' from 'get_role' response if present (passes
+  placebo tests) [James Cooper]
+
+- Add unit tests for Role.delete. [James Cooper]
+
+- Context.py: revert pep8 fix. [James Cooper]
+
+- Context.py: pep8 - line too long. [James Cooper]
+
+- Modify role.delete to no-op if role missing. [James Cooper]
+
+  If "kappa delete" fails midway then re-running it will fail during
+  role removal.
+
+  This PR modifies `delete` to check if the role exists.  If it does not
+  then we log a debug line and return early.
+
+  I also consolidated various methods that were calling `get_role` so that
+  error handling is consistent, and removed `_find_all_roles` as
+  `get_role` is sufficient, and probably faster (particularly for accounts
+  with many roles).
+
+
+- Fix code smell. [Jose Diaz-Gonzalez]
+
+- Simplify event source retrieval. [Jose Diaz-Gonzalez]
+
+- Make output look a little nicer. [Jose Diaz-Gonzalez]
+
+- Require that environment exist before indexing it. [Jose Diaz-
+  Gonzalez]
+
+- Refactor event sources into their own modules. [Jose Diaz-Gonzalez]
+
 0.5.1 (2016-06-12)
 ------------------
 
