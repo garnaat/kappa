@@ -72,6 +72,8 @@ class CloudWatchEventSource(kappa.event_source.base.EventSource):
                                              Principal='events.amazonaws.com',
                                              SourceArn=self._config['arn'])
                 LOG.debug(response)
+            else:
+                LOG.debug('CloudWatch event source permission already exists')
             response = self._events.call('put_targets',
                                          Rule=self._name,
                                          Targets=[{

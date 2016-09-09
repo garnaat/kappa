@@ -15,6 +15,7 @@
 
 import kappa.event_source.base
 import logging
+import uuid
 
 LOG = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ class S3EventSource(kappa.event_source.base.EventSource):
     def __init__(self, context, config):
         super(S3EventSource, self).__init__(context, config)
         self._s3 = kappa.awsclient.create_client('s3', context.session)
+        self._lambda = kappa.awsclient.create_client('lambda', context.session)
 
     def _make_notification_id(self, function_name):
         return 'Kappa-%s-notification' % function_name
@@ -32,14 +34,30 @@ class S3EventSource(kappa.event_source.base.EventSource):
         return self.arn.split(':')[-1]
 
     def add(self, function):
-        notification_spec = {
-            'LambdaFunctionConfigurations': [
-                {
-                    'Id': self._make_notification_id(function.name),
-                    'Events': [e for e in self._config['events']],
-                    'LambdaFunctionArn': function.arn,
-                }
-            ]
+
+        existingPermission={}
+        try:
+            response = self._lambda.call('get_policy',
+                                     FunctionName='%s:%s' % (function.name, function._context.environment))
+            existingPermission = self.arn in str(response['Policy'])
+        except Exception:
+            LOG.debug('S3 event source permission not available')
+
+        if not existingPermission:
+            response = self._lambda.call('add_permission',
+                                         FunctionName='%s:%s' % (function.name, function._context.environment),
+                                         StatementId=str(uuid.uuid4()),
+                                         Action='lambda:InvokeFunction',
+                                         Principal='s3.amazonaws.com',
+                                         SourceArn=self.arn)
+            LOG.debug(response)
+        else:
+            LOG.debug('S3 event source permission already exists')
+
+        new_notification_spec = {
+            'Id': self._make_notification_id(function.name),
+            'Events': [e for e in self._config['events']],
+            'LambdaFunctionArn': '%s:%s' % (function.arn, function._context.environment),
         }
 
         # Add S3 key filters
@@ -47,19 +65,41 @@ class S3EventSource(kappa.event_source.base.EventSource):
             filters_spec = { 'Key' : { 'FilterRules' : [] } }
             for filter in self._config['key_filters']:
                 if 'type' in filter and 'value' in filter and filter['type'] in ('prefix', 'suffix'):
-                    rule = { 'Name' : filter['type'], 'Value' : filter['value'] }
+                    rule = { 'Name' : filter['type'].capitalize(), 'Value' : filter['value'] }
                     filters_spec['Key']['FilterRules'].append(rule)
-            notification_spec['LambdaFunctionConfigurations'][0]['Filter'] = filters_spec
+            new_notification_spec['Filter'] = filters_spec
 
+        notification_spec_list = []
         try:
             response = self._s3.call(
-                'put_bucket_notification_configuration',
-                Bucket=self._get_bucket_name(),
-                NotificationConfiguration=notification_spec)
+                'get_bucket_notification_configuration',
+                Bucket=self._get_bucket_name())
             LOG.debug(response)
+            notification_spec_list = response['LambdaFunctionConfigurations']
         except Exception as exc:
-            LOG.debug(exc.response)
-            LOG.exception('Unable to add S3 event source')
+            LOG.debug('Unable to get existing S3 event source notification configurations')
+
+        if new_notification_spec not in notification_spec_list:
+            notification_spec_list.append(new_notification_spec)
+        else:       
+            notification_spec_list=[]
+            LOG.debug("S3 event source already exists")
+
+        if notification_spec_list:
+
+            notification_configuration = {
+                'LambdaFunctionConfigurations': notification_spec_list
+            }
+
+            try:
+                response = self._s3.call(
+                    'put_bucket_notification_configuration',
+                    Bucket=self._get_bucket_name(),
+                    NotificationConfiguration=notification_configuration)
+                LOG.debug(response)
+            except Exception as exc:
+                LOG.debug(exc.response)
+                LOG.exception('Unable to add S3 event source')
 
     enable = add
 
