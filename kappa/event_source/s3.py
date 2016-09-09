@@ -38,14 +38,14 @@ class S3EventSource(kappa.event_source.base.EventSource):
         existingPermission={}
         try:
             response = self._lambda.call('get_policy',
-                                     FunctionName='%s:%s' % (function.name, function._context.environment))
+                                     FunctionName=function.name)
             existingPermission = self.arn in str(response['Policy'])
         except Exception:
             LOG.debug('S3 event source permission not available')
 
         if not existingPermission:
             response = self._lambda.call('add_permission',
-                                         FunctionName='%s:%s' % (function.name, function._context.environment),
+                                         FunctionName=function.name,
                                          StatementId=str(uuid.uuid4()),
                                          Action='lambda:InvokeFunction',
                                          Principal='s3.amazonaws.com',
@@ -57,7 +57,7 @@ class S3EventSource(kappa.event_source.base.EventSource):
         new_notification_spec = {
             'Id': self._make_notification_id(function.name),
             'Events': [e for e in self._config['events']],
-            'LambdaFunctionArn': '%s:%s' % (function.arn, function._context.environment),
+            'LambdaFunctionArn': function.arn,
         }
 
         # Add S3 key filters
