@@ -33,6 +33,24 @@ class S3EventSource(kappa.event_source.base.EventSource):
     def _get_bucket_name(self):
         return self.arn.split(':')[-1]
 
+    def _get_notification_spec(self, function):
+            notification_spec = {
+                'Id': self._make_notification_id(function.name),
+                'Events': [e for e in self._config['events']],
+                'LambdaFunctionArn': function.arn,
+            }
+
+            # Add S3 key filters
+            if 'key_filters' in self._config:
+                filters_spec = { 'Key' : { 'FilterRules' : [] } }
+                for filter in self._config['key_filters']:
+                    if 'type' in filter and 'value' in filter and filter['type'] in ('prefix', 'suffix'):
+                        rule = { 'Name' : filter['type'].capitalize(), 'Value' : filter['value'] }
+                        filters_spec['Key']['FilterRules'].append(rule)
+                notification_spec['Filter'] = filters_spec
+
+            return notification_spec
+
     def add(self, function):
 
         existingPermission={}
@@ -54,20 +72,7 @@ class S3EventSource(kappa.event_source.base.EventSource):
         else:
             LOG.debug('S3 event source permission already exists')
 
-        new_notification_spec = {
-            'Id': self._make_notification_id(function.name),
-            'Events': [e for e in self._config['events']],
-            'LambdaFunctionArn': function.arn,
-        }
-
-        # Add S3 key filters
-        if 'key_filters' in self._config:
-            filters_spec = { 'Key' : { 'FilterRules' : [] } }
-            for filter in self._config['key_filters']:
-                if 'type' in filter and 'value' in filter and filter['type'] in ('prefix', 'suffix'):
-                    rule = { 'Name' : filter['type'].capitalize(), 'Value' : filter['value'] }
-                    filters_spec['Key']['FilterRules'].append(rule)
-            new_notification_spec['Filter'] = filters_spec
+        new_notification_spec = self._get_notification_spec(function)
 
         notification_spec_list = []
         try:
@@ -108,20 +113,7 @@ class S3EventSource(kappa.event_source.base.EventSource):
 
     def remove(self, function):
 
-        notification_spec = {
-            'Id': self._make_notification_id(function.name),
-            'Events': [e for e in self._config['events']],
-            'LambdaFunctionArn': function.arn,
-        }
-
-        # Add S3 key filters
-        if 'key_filters' in self._config:
-            filters_spec = { 'Key' : { 'FilterRules' : [] } }
-            for filter in self._config['key_filters']:
-                if 'type' in filter and 'value' in filter and filter['type'] in ('prefix', 'suffix'):
-                    rule = { 'Name' : filter['type'].capitalize(), 'Value' : filter['value'] }
-                    filters_spec['Key']['FilterRules'].append(rule)
-            notification_spec['Filter'] = filters_spec
+        notification_spec = self._get_notification_spec(function)
 
         LOG.debug('removing s3 notification')
         response = self._s3.call(
@@ -146,13 +138,23 @@ class S3EventSource(kappa.event_source.base.EventSource):
 
     def status(self, function):
         LOG.debug('status for s3 notification for %s', function.name)
+
+        notification_spec = self._get_notification_spec(function)
+
         response = self._s3.call(
-            'get_bucket_notification',
+            'get_bucket_notification_configuration',
             Bucket=self._get_bucket_name())
         LOG.debug(response)
-        if 'CloudFunctionConfiguration' not in response:
+
+
+        if 'LambdaFunctionConfigurations' not in response:
             return None
+        
+        notification_spec_list = response['LambdaFunctionConfigurations']
+        if notification_spec not in notification_spec_list:
+            return None
+        
         return {
-            'EventSourceArn': response['CloudFunctionConfiguration']['CloudFunction'],
+            'EventSourceArn': self.arn,
             'State': 'Enabled'
         }
