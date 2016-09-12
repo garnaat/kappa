@@ -56,13 +56,24 @@ class CloudWatchEventSource(kappa.event_source.base.EventSource):
             response = self._events.call('put_rule', **kwargs)
             LOG.debug(response)
             self._config['arn'] = response['RuleArn']
-            response = self._lambda.call('add_permission',
-                                         FunctionName=function.name,
-                                         StatementId=str(uuid.uuid4()),
-                                         Action='lambda:InvokeFunction',
-                                         Principal='events.amazonaws.com',
-                                         SourceArn=response['RuleArn'])
-            LOG.debug(response)
+            existingPermission={}
+            try:
+                response = self._lambda.call('get_policy',
+                                         FunctionName=function.name)
+                existingPermission = self._config['arn'] in str(response['Policy'])
+            except Exception:
+                LOG.debug('CloudWatch event source permission not available')
+
+            if not existingPermission:
+                response = self._lambda.call('add_permission',
+                                             FunctionName=function.name,
+                                             StatementId=str(uuid.uuid4()),
+                                             Action='lambda:InvokeFunction',
+                                             Principal='events.amazonaws.com',
+                                             SourceArn=self._config['arn'])
+                LOG.debug(response)
+            else:
+                LOG.debug('CloudWatch event source permission already exists')
             response = self._events.call('put_targets',
                                          Rule=self._name,
                                          Targets=[{
