@@ -17,6 +17,8 @@ import kappa.awsclient
 import kappa.event_source.base
 import logging
 
+from botocore.exceptions import ClientError
+
 LOG = logging.getLogger(__name__)
 
 
@@ -25,6 +27,7 @@ class SNSEventSource(kappa.event_source.base.EventSource):
     def __init__(self, context, config):
         super(SNSEventSource, self).__init__(context, config)
         self._sns = kappa.awsclient.create_client('sns', context.session)
+        self._lambda = kappa.awsclient.create_client('lambda', context.session)
 
     def _make_notification_id(self, function_name):
         return 'Kappa-%s-notification' % function_name
@@ -51,6 +54,22 @@ class SNSEventSource(kappa.event_source.base.EventSource):
             LOG.debug(response)
         except Exception:
             LOG.exception('Unable to add SNS event source')
+        try:
+            response = self._lambda.call(
+                    'add_permission',
+                    FunctionName=function.name,
+                    StatementId=function.name+'_'+self._context.environment,
+                    Action='lambda:InvokeFunction',
+                    Principal='sns.amazonaws.com',
+                    SourceArn=self.arn)
+            LOG.debug(response)
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceConflictException':
+                LOG.debug('Permission already exists - Continuing')
+            else:
+                LOG.exception('Error adding lambdaInvoke permission to SNS event source')
+        except Exception:
+            LOG.exception('Error adding lambdaInvoke permission to SNS event source')
 
     enable = add
 
@@ -68,6 +87,14 @@ class SNSEventSource(kappa.event_source.base.EventSource):
                 LOG.debug(response)
         except Exception:
             LOG.exception('Unable to remove event source %s', self.arn)
+        try:
+            response = self._lambda.call(
+                    'remove_permission',
+                    FunctionName=function.name,
+                    StatementId=function.name+'_'+self._context.environment)
+            LOG.debug(response)
+        except Exception:
+            LOG.exception('Unable to remove lambda execute permission to SNS event source')
 
     disable = remove
 
