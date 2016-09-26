@@ -76,3 +76,21 @@ class Log(object):
             LOG.debug(response)
         except ClientError:
             LOG.debug('unable to delete log group')
+
+    def add_log_retention_policy(self,log_retention_policy_days):
+        if not self._check_for_log_group():
+            LOG.debug('log group %s has not been created yet, creating', self.log_group_name)
+            try:
+                response = self._log_client.call('create_log_group',
+                                 logGroupName=self.log_group_name)
+                LOG.debug(response)
+            except ClientError:
+                LOG.exception('unable to create log group')
+        LOG.debug('adding log group retention policy', self.log_group_name)
+        try:
+            response = self._log_client.call('put_retention_policy',
+                             logGroupName=self.log_group_name,
+                             retentionInDays=log_retention_policy_days)
+            LOG.debug(response)
+        except ClientError:
+                LOG.exception('unable to add retention policy to log group')

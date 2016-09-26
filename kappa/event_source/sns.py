@@ -58,7 +58,7 @@ class SNSEventSource(kappa.event_source.base.EventSource):
             response = self._lambda.call(
                     'add_permission',
                     FunctionName=function.name,
-                    StatementId=function.name+'_'+self._context.environment,
+                    StatementId=self.arn.split(":")[-1],
                     Action='lambda:InvokeFunction',
                     Principal='sns.amazonaws.com',
                     SourceArn=self.arn)
@@ -91,7 +91,7 @@ class SNSEventSource(kappa.event_source.base.EventSource):
             response = self._lambda.call(
                     'remove_permission',
                     FunctionName=function.name,
-                    StatementId=function.name+'_'+self._context.environment)
+                    StatementId=self.arn.split(":")[-1])
             LOG.debug(response)
         except Exception:
             LOG.exception('Unable to remove lambda execute permission to SNS event source')
