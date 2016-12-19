@@ -63,8 +63,11 @@ class Context(object):
         if recording_path:
             self.pill = placebo.attach(self.session, recording_path)
             self.pill.record()
-        self.policy = kappa.policy.Policy(
-            self, self.config['environments'][self.environment])
+        if self.config['environments'][self.environment].get('policy',None):
+            self.policy = kappa.policy.Policy(
+                self, self.config['environments'][self.environment])
+        else:
+            self.policy = None
         self.role = kappa.role.Role(
             self, self.config['environments'][self.environment])
         self.function = kappa.function.Function(
