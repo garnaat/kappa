@@ -48,6 +48,16 @@ class Function(object):
         return self._context.name
 
     @property
+    def environment_variables(self):
+        try:
+            if (self._context.environment_variables is not None):
+                return {'Variables': self._context.environment_variables}
+        except AttributeError:
+            pass
+
+        return {'Variables': {}}
+
+    @property
     def runtime(self):
         return self._config['runtime']
 
@@ -192,6 +202,8 @@ class Function(object):
         m.update(self._context.exec_role_arn.encode('utf-8'))
         m.update(str(self.timeout).encode('utf-8'))
         m.update(str(self.vpc_config).encode('utf-8'))
+        m.update(str(self.environment_variables).encode('utf-8'))
+
         config_md5 = m.hexdigest()
         cached_md5 = self._context.get_cache_value('config_md5')
         LOG.debug('config_md5: %s', config_md5)
@@ -392,6 +404,7 @@ class Function(object):
                         Runtime=self.runtime,
                         Role=exec_role,
                         Handler=self.handler,
+                        Environment=self.environment_variables,
                         Description=self.description,
                         Timeout=self.timeout,
                         MemorySize=self.memory_size,
@@ -448,6 +461,7 @@ class Function(object):
                     VpcConfig=self.vpc_config,
                     Role=exec_role,
                     Handler=self.handler,
+                    Environment=self.environment_variables,
                     Description=self.description,
                     Timeout=self.timeout,
                     MemorySize=self.memory_size)

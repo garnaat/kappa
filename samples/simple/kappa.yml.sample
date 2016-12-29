@@ -4,6 +4,9 @@ environments:
   dev:
     profile: <your profile here>
     region: <your region here>
+    environment_variables:
+      key_one: "potatoes"
+      second_key: "Strawberries"
     policy:
       resources:
         - arn: arn:aws:logs:*:*:*
@@ -12,6 +15,7 @@ environments:
   prod:
     profile: <your profile here>
     region: <your region here>
+    environment_variables:
     policy:
       resources:
         - arn: arn:aws:logs:*:*:*
