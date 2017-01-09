@@ -20,6 +20,9 @@ Here is an example config file showing all possible sections.
       env1:
         profile: profile1
         region: us-west-2
+        environment_variables:
+          key_one: "potatoes"
+          second_key: "Strawberries"
         policy:
           resources:
             - arn: arn:aws:dynamodb:us-west-2:123456789012:table/foo
@@ -78,20 +81,25 @@ Line Number    Description
 5              The profile name associated with this environment.  This
                refers to a profile in your AWS credential file.
 6              The AWS region associated with this environment.
-7              This section defines the elements of the IAM policy that will
+7              The environment_variables namespace is optional, but required
+               if you wish to specify any environment variable.
+               You may use any arbitrary value for the key or value
+               as long as both Python keyword argument syntax and the
+               AWS environment variable API restrictions are respected.
+10             This section defines the elements of the IAM policy that will
                be created for this function in this environment.
-9              Each resource your function needs access to needs to be
+12             Each resource your function needs access to needs to be
                listed here.  Provide the ARN of the resource as well as
                a list of actions.  This could be wildcarded to allow all
                actions but preferably should list the specific actions you
                want to allow.
-15             If your Lambda function has any event sources, this would be
+18             If your Lambda function has any event sources, this would be
                where you list them.  Here, the example shows a Kinesis
                stream but this could also be a DynamoDB stream, an SNS
                topic, or an S3 bucket.
-18             For Kinesis streams and DynamoDB streams, you can specify
+21             For Kinesis streams and DynamoDB streams, you can specify
                the starting position (one of LATEST or TRIM_HORIZON) and
                the batch size.
-35             This section contains settings specify to your Lambda
+38             This section contains settings specify to your Lambda
                function.  See the Lambda docs for details on these.
 ===========    =============================================================
