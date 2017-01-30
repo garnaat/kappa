@@ -46,10 +46,11 @@ class Role(object):
             self._iam_client = kappa.awsclient.create_client(
                 'iam', context.session)
         self._arn = None
+        self._config_name = config.get('role', None) and config['role'].get('name', None)
 
     @property
     def name(self):
-        return '{}_{}'.format(self._context.name, self._context.environment)
+        return self._config_name or '{}_{}'.format(self._context.name, self._context.environment)
 
     @property
     def arn(self):

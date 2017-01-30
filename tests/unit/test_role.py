@@ -41,7 +41,7 @@ class TestRole(unittest.TestCase):
                                    self.context.environment),
             'Arn': randomword(10)
         }
-        self.role = Role(self.context, None, iam_client=self.iam_client)
+        self.role = Role(self.context, {'environments': {'dev': {}}}, iam_client=self.iam_client)
 
     def _expect_get_role(self):
         get_role_resp = {'Role': self.role_record}
