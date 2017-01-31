@@ -91,6 +91,9 @@ like this:
       dev:
         profile: <your profile here>
         region: <your region here>
+        environment_variables:
+          <key 1>: <value 1>
+          <key 2>: <value 2>
         policy:
           resources:
             - arn: arn:aws:logs:*:*:*
@@ -119,16 +122,16 @@ The ``environments`` section is where we define the different environments into
 which we wish to deploy this Lambda function.  Each environment is identified
 by a ``profile`` (as used in the AWS CLI and other AWS tools) and a
 ``region``.  You can define as many environments as you wish but each
-invocation of ``kappa`` will deal with a single environment.  Each environment
-section also includes a ``policy`` section.  This is where we tell kappa about
-AWS resources that our Lambda function needs access to and what kind of access
-it requires.  For example, your Lambda function may need to read from an SNS
-topic or write to a DynamoDB table and this is where you would provide the ARN
-(`Amazon Resource Name`_)
-that identify those resources.  Since this is a very simple example, the only
-resource listed here is for CloudWatch logs so that our Lambda function is able
-to write to the CloudWatch log group that will be created for it automatically
-by AWS Lambda.
+invocation of ``kappa`` will deal with a single environment.  An environment
+can optionally contain ``environment variables`` as key-value pairs.  Each
+environment section also includes a ``policy`` section.  This is where we tell
+kappa about AWS resources that our Lambda function needs access to and what
+kind of access it requires.  For example, your Lambda function may need to
+read from an SNS topic or write to a DynamoDB table and this is where you would
+provide the ARN (`Amazon Resource Name`_) that identifies those resources.
+Since this is a very simple example, the only resource listed here is for
+CloudWatch logs so that our Lambda function is able to write to the CloudWatch
+log group that will be created for it automatically by AWS Lambda.
 
 .. _`Amazon Resource Name`: http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
 

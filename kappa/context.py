@@ -59,6 +59,9 @@ class Context(object):
 
         profile = self.config['environments'][self.environment]['profile']
         region = self.config['environments'][self.environment]['region']
+        if 'environment_variables' in (self.config['environments'][self.environment]):
+            self.environment_variables = self.config['environments'][self.environment]['environment_variables']
+
         self.session = kappa.awsclient.create_session(profile, region)
         if recording_path:
             self.pill = placebo.attach(self.session, recording_path)
