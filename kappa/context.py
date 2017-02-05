@@ -57,7 +57,7 @@ class Context(object):
             LOG.error(message)
             sys.exit(1)
 
-        profile = self.config['environments'][self.environment]['profile']
+        profile = self.config['environments'][self.environment].get('profile', None)
         region = self.config['environments'][self.environment]['region']
         self.session = kappa.awsclient.create_session(profile, region)
         if recording_path:

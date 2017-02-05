@@ -52,3 +52,18 @@ class TestLog(unittest.TestCase):
         ctx = kappa.context.Context(cfg_fp, 'dev')
         ctx.deploy()
         ctx.deploy()
+
+
+    def test_deploy_no_profile(self):
+        self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
+        self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
+        self.session = kappa.awsclient.create_session(None, 'us-west-2')
+
+        pill = placebo.attach(self.session, self.data_path)
+        pill.playback()
+        os.chdir(self.prj_path)
+        cfg_filepath = os.path.join(self.prj_path, 'kappa-no-profile.yml')
+        cfg_fp = open(cfg_filepath)
+        ctx = kappa.context.Context(cfg_fp, 'dev')
+        ctx.deploy()
+        ctx.deploy()

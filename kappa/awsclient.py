@@ -89,7 +89,7 @@ class AWSClient(object):
         return data
 
 
-def create_session(profile_name, region_name):
+def create_session(profile_name=None, region_name=None):
     global _session_cache
     session_key = '{}:{}'.format(profile_name, region_name)
     if session_key not in _session_cache:
