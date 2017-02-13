@@ -57,7 +57,7 @@ class Context(object):
             LOG.error(message)
             sys.exit(1)
 
-        profile = self.config['environments'][self.environment]['profile']
+        profile = self.config['environments'][self.environment].get('profile', None)
         region = self.config['environments'][self.environment]['region']
         if 'environment_variables' in (self.config['environments'][self.environment]):
             self.environment_variables = self.config['environments'][self.environment]['environment_variables']
