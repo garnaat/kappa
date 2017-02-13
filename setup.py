@@ -35,7 +35,7 @@ def run_setup():
         test_suite='tests',
         include_package_data=True,
         zip_safe=True,
-        classifiers=(
+        classifiers=[
             'Development Status :: 3 - Alpha',
             'Intended Audience :: Developers',
             'Intended Audience :: System Administrators',
@@ -47,7 +47,7 @@ def run_setup():
             'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5'
-        ),
+        ],
     )
 
 if __name__ == '__main__':
