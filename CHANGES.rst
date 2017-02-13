@@ -1,6 +1,56 @@
 Changelog
 =========
 
+0.7.0 (2017-02-13)
+------------------
+
+- Support alternate git status output. [Jose Diaz-Gonzalez]
+
+- Do not force use of profile for AWS session. [Wilfrido Vidana]
+
+   * Let boto3 handle credentials, do not force the use of profile
+
+
+- Added documentation for Environment Variables. [Bruno Carrier]
+
+- Added environment variable support. [Bruno Carrier]
+
+- Allow deploys with existing role. [Wilfrido Vidana]
+
+   * No policy needed
+   * Use role name
+
+
+- Add lambdaInvoke permissions for SNS Events. [Tim Van de Walle]
+
+  SNS events need to be given the lambdaInvoke permission so that they can
+  call the lambda function.
+
+  Fixes #76.
+
+
+- Adding fix for issue 90. Adding _get_notification_spec function to s3
+  event source. [Dylan Armstrong]
+
+- Adding fix for issue 89. [Dylan Armstrong]
+
+- Removing environment suffix from function name/arn. [Dylan Armstrong]
+
+- Adding fixes for issues 87 and 88. [Dylan Armstrong]
+
+- Adding fix for issue 85: Updating cloudwatch event source causes
+  trigger to show multiple times in AWS console. [Dylan Armstrong]
+
+- LambdaFunctionArn shouldn't be suffixed with the environment. [Igor
+  Serko]
+
+  When configuring the S3 bucket event the function `add` builds the `LambdaFunctionConfigurations` which specifies the `LambdaFunctionArn`. The ARN should be the functions *exact* ARN and not suffixed by the environment ex.`arn:aws:lambda:us-west-1:1234567890123:function:bigquery_commit:main-env`.
+
+  It makes the Lambda UI and the S3 event sources UI confused as they don't recognize that the specific Lambda function even exists.
+
+  The reason why I made this change is because I had problems applying the bucket event cross-account and could not do this without this change.
+
+
 0.6.0 (2016-08-03)
 ------------------
 
