@@ -106,6 +106,10 @@ class Function(object):
         return self._config.get('permissions', list())
 
     @property
+    def log_retention_policy(self):
+        return self._config.get('log_retention_policy', "")
+
+    @property
     def log(self):
         if self._log is None:
             log_group_name = '/aws/lambda/%s' % self.name
@@ -384,6 +388,10 @@ class Function(object):
                 permission.get('source_arn'),
                 permission.get('source_account'))
 
+    def add_log_retention_policy(self):
+        if self.log_retention_policy:
+            self.log.add_log_retention_policy(self.log_retention_policy)
+
     def create(self):
         LOG.info('creating function %s', self.name)
         self._check_function_md5()
@@ -426,6 +434,7 @@ class Function(object):
                     LOG.exception('Unable to upload zip file')
                     ready = True
         self.add_permissions()
+        self.add_log_retention_policy()
 
     def update(self):
         LOG.info('updating function %s', self.name)
@@ -447,6 +456,7 @@ class Function(object):
                         'For the {} stage'.format(self._context.environment))
                 except Exception:
                     LOG.exception('unable to update zip file')
+        self.add_log_retention_policy()
 
     def update_configuration(self):
         if self._check_config_md5():

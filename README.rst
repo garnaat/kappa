@@ -113,6 +113,7 @@ like this:
       runtime: python2.7
       memory_size: 128
       timeout: 3
+      log_retention_policy: 7
 
 The ``name`` at the top is just a name used for this Lambda function and other
 things we create that are related to this Lambda function (e.g. roles,
@@ -137,7 +138,9 @@ log group that will be created for it automatically by AWS Lambda.
 
 The ``lambda`` section contains the configuration information about our Lambda
 function.  These values are passed to Lambda when we create the function and
-can be updated at any time after.
+can be updated at any time after. ``log_retention_policy`` is an optional
+parameter. When supplied, it defines the number of days our Lambda function
+Cloudwatch logs kept for. By default, these logs are never removed.
 
 To modify this for your own use, you just need to put in the right values for
 ``profile`` and ``region`` in one of the environment sections.  You can also

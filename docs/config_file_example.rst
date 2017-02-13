@@ -57,6 +57,7 @@ Here is an example config file showing all possible sections.
       runtime: python2.7
       memory_size: 256
       timeout: 3
+      log_retention_policy: 7
       vpc_config:
         security_group_ids:
           - sg-12345678
