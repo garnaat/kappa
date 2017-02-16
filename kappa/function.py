@@ -316,16 +316,11 @@ class Function(object):
         # Find the current (latest) version by version number
         # First find the SHA256 of $LATEST
         versions = self.list_versions()
-        for v in versions:
-            if v['Version'] == '$LATEST':
-                latest_sha256 = v['CodeSha256']
-                break
-        for v in versions:
-            if v['Version'] != '$LATEST':
-                if v['CodeSha256'] == latest_sha256:
-                    version = v['Version']
-                    break
-        return version
+        latest_sha256 = next(v['CodeSha256'] for v in versions
+            if v['Version'] == '$LATEST')
+        # Looping reversed since last version numbers is on last index usually
+        return next(v['Version'] for v in reversed(versions)
+            if v['Version'] != '$LATEST' and v['CodeSha256'] == latest_sha256)
 
     def create_alias(self, name, description, version=None):
         if not version:
@@ -493,9 +488,16 @@ class Function(object):
                 'list_versions_by_function',
                 FunctionName=self.name)
             LOG.debug(response)
+            versions = response['Versions']
+            while (response.get('NextMarker', None)):
+                reponse = self._lambda_client.call(
+                    'list_versions_by_function',
+                    FunctionName=self.name,
+                    Marker=response['NextMarker'])
+                versions += response['Versions']
         except Exception:
             LOG.exception('Unable to list versions')
-        return response['Versions']
+        return versions
 
     def tag(self, name, description):
         self.create_alias(name, description)
