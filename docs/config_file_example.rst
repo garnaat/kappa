@@ -58,6 +58,7 @@ Here is an example config file showing all possible sections.
       memory_size: 256
       timeout: 3
       log_retention_policy: 7
+      excluded_dirs: default
       vpc_config:
         security_group_ids:
           - sg-12345678
@@ -103,4 +104,10 @@ Line Number    Description
                the batch size.
 38             This section contains settings specify to your Lambda
                function.  See the Lambda docs for details on these.
+45             Kappa excludes directories from build-in libraries provided
+               by AWS Lambda from the upload zip file when `excluded_dirs`
+               is not specified or set to 'default'. When `excluded_dirs`
+               is set to 'none', kappa will exclude no directories.
+               Otherwise kappa will exclude directories specified when
+               `excluded_dirs` is set.
 ===========    =============================================================
