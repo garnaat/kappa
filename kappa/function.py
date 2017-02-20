@@ -31,9 +31,9 @@ LOG = logging.getLogger(__name__)
 
 class Function(object):
 
-    excluded_dirs = ['boto3', 'botocore', 'concurrent', 'dateutil',
-                     'docutils', 'futures', 'jmespath', 'python_dateutil']
-    excluded_files = ['.gitignore']
+    DEFAULT_EXCLUDED_DIRS = ['boto3', 'botocore', 's3transfer', 'concurrent', 'dateutil', 'docutils', 'futures',
+                             'jmespath', 'python_dateutil']
+    DEFAULT_EXCLUDED_FILES = ['.gitignore']
 
     def __init__(self, context, config):
         self._context = context
@@ -96,6 +96,19 @@ class Function(object):
     @property
     def zipfile_name(self):
         return '{}.zip'.format(self._context.name)
+
+    @property
+    def excluded_dirs(self):
+        excluded_dirs = self._config.get('excluded_dirs', 'default')
+        if excluded_dirs == 'default':
+            excluded_dirs = self.DEFAULT_EXCLUDED_DIRS
+        elif excluded_dirs == 'none':
+            excluded_dirs = list()
+        return excluded_dirs
+
+    @property
+    def excluded_files(self):
+        return self._config.get('excluded_files', self.DEFAULT_EXCLUDED_FILES)
 
     @property
     def tests(self):
@@ -230,6 +243,7 @@ class Function(object):
     def _zip_lambda_dir(self, zipfile_name, lambda_dir):
         LOG.debug('_zip_lambda_dir: lambda_dir=%s', lambda_dir)
         LOG.debug('zipfile_name=%s', zipfile_name)
+        LOG.debug('excluded_dirs={}'.format(self.excluded_dirs))
         relroot = os.path.abspath(lambda_dir)
         with zipfile.ZipFile(zipfile_name, 'a',
                              compression=zipfile.ZIP_DEFLATED) as zf:
