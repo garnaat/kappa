@@ -61,6 +61,7 @@ class AWSClient(object):
             will be applied to the data returned from the low-level
             call.  This allows you to tailor the returned data to be
             exactly what you want.
+          * It automatically gets rid of uneeded parameters (with None values)
 
         :type op_name: str
         :param op_name: The name of the request you wish to make.
@@ -75,6 +76,7 @@ class AWSClient(object):
             to the method when making the request.
         """
         LOG.debug(kwargs)
+        kwargs = {k: v for k, v in kwargs.items() if v}
         if query:
             query = jmespath.compile(query)
         if self.client.can_paginate(op_name):

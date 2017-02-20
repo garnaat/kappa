@@ -55,7 +55,7 @@ class Function(object):
         except AttributeError:
             pass
 
-        return {'Variables': {}}
+        return None
 
     @property
     def runtime(self):
