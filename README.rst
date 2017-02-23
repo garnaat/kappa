@@ -246,3 +246,39 @@ statement:
             - "logs:*"
 
 Both of these do the same thing.
+
+Release Process
+===============
+
+    Maintainers *must* have contribution rights on github and release rights on PyPI or the release will fail.
+
+Active development on ``kappa`` is done on the ``develop`` branch. The following steps should be completed when making a release:
+
+.. code-block:: yaml
+
+     # ensure your local develop branch is up to date
+     git checkout develop
+     git pull origin develop
+     
+     # ensure your local master branch is up to date
+     git checkout master
+     git pull origin master
+
+     # merge all the develop changes into master
+     git merge develop
+     
+     # make the release
+     # RELEASE_TYPE can be any of the following: major minor patch
+     ./release RELEASE_TYPE
+     
+     # update develop on github
+     git branch -D develop
+     git checkout -b develop
+     git push origin develop
+
+This will:
+
+1. Bump the version in ``kappa/__init__.py``
+2. Update the readme and changelog
+3. Create a new git tag and push it to github
+4. Upload dist and wheel packages to pypi
