@@ -365,6 +365,12 @@ class Function(object):
                 FunctionVersion=version,
                 Name=name)
             LOG.debug(response)
+        except ClientError as e:
+            if 'ResourceNotFoundException' in str(e):
+                LOG.debug('Alias not found, creating it...')
+                self.create_alias(name, description, version)
+            else:
+                LOG.error('Unexpected error while update_alias: %s', e)
         except Exception:
             LOG.exception('Unable to update alias')
 
@@ -460,11 +466,11 @@ class Function(object):
                         ZipFile=zipdata,
                         Publish=True)
                     LOG.debug(response)
-                    self.update_alias(
-                        self._context.environment,
-                        'For the {} stage'.format(self._context.environment))
                 except Exception:
                     LOG.exception('unable to update zip file')
+        self.update_alias(
+            self._context.environment,
+            'For the {} stage'.format(self._context.environment))
         self.add_log_retention_policy()
 
     def update_configuration(self):
