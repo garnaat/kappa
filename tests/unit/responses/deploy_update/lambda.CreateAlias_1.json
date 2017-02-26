@@ -1,0 +1,21 @@
+{
+    "status_code": 201,
+    "data": {
+        "ResponseMetadata": {
+            "RequestId": "2b64ce78-fc87-11e6-b186-2998b89cd8b5",
+            "HTTPStatusCode": 201,
+            "HTTPHeaders": {
+                "content-type": "application/json",
+                "date": "Mon, 27 Feb 2017 00:53:35 GMT",
+                "x-amzn-requestid": "2b64ce78-fc87-11e6-b186-2998b89cd8b5",
+                "content-length": "143",
+                "connection": "keep-alive"
+            },
+            "RetryAttempts": 0
+        },
+        "AliasArn": "arn:aws:lambda:us-east-1:123456789012:function:kappa-simple:dev",
+        "Name": "dev",
+        "FunctionVersion": "9",
+        "Description": "For stage dev"
+    }
+}

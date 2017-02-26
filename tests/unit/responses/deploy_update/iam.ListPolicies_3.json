@@ -1,0 +1,77 @@
+{
+    "status_code": 200,
+    "data": {
+        "Policies": [
+            {
+                "PolicyName": "kappa-simple_dev",
+                "PolicyId": "ANPAI7F5OQ3EKQ6IGG5II",
+                "Arn": "arn:aws:iam::123456789012:policy/kappa/kappa-simple_dev",
+                "Path": "/kappa/",
+                "DefaultVersionId": "v1",
+                "AttachmentCount": 0,
+                "IsAttachable": true,
+                "CreateDate": {
+                    "__class__": "datetime",
+                    "year": 2017,
+                    "month": 2,
+                    "day": 27,
+                    "hour": 0,
+                    "minute": 53,
+                    "second": 34,
+                    "microsecond": 0
+                },
+                "UpdateDate": {
+                    "__class__": "datetime",
+                    "year": 2017,
+                    "month": 2,
+                    "day": 27,
+                    "hour": 0,
+                    "minute": 53,
+                    "second": 34,
+                    "microsecond": 0
+                }
+            },
+            {
+                "PolicyName": "kappa-simple_new-alias",
+                "PolicyId": "ANPAJID6TMBOEVMCUACH4",
+                "Arn": "arn:aws:iam::123456789012:policy/kappa/kappa-simple_new-alias",
+                "Path": "/kappa/",
+                "DefaultVersionId": "v1",
+                "AttachmentCount": 1,
+                "IsAttachable": true,
+                "CreateDate": {
+                    "__class__": "datetime",
+                    "year": 2017,
+                    "month": 2,
+                    "day": 26,
+                    "hour": 18,
+                    "minute": 9,
+                    "second": 22,
+                    "microsecond": 0
+                },
+                "UpdateDate": {
+                    "__class__": "datetime",
+                    "year": 2017,
+                    "month": 2,
+                    "day": 26,
+                    "hour": 18,
+                    "minute": 9,
+                    "second": 22,
+                    "microsecond": 0
+                }
+            }
+        ],
+        "IsTruncated": false,
+        "ResponseMetadata": {
+            "RequestId": "308585cb-fc87-11e6-973d-55bc4e8fa5df",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {
+                "x-amzn-requestid": "308585cb-fc87-11e6-973d-55bc4e8fa5df",
+                "content-type": "text/xml",
+                "content-length": "1289",
+                "date": "Mon, 27 Feb 2017 00:53:44 GMT"
+            },
+            "RetryAttempts": 0
+        }
+    }
+}

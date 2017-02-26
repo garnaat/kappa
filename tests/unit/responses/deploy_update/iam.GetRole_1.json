@@ -1,0 +1,33 @@
+{
+    "status_code": 200,
+    "data": {
+        "Role": {
+            "Path": "/kappa/",
+            "RoleName": "kappa-simple_dev",
+            "RoleId": "AROAI2N2VJO5C2CC7ZWHI",
+            "Arn": "arn:aws:iam::123456789012:role/kappa/kappa-simple_dev",
+            "CreateDate": {
+                "__class__": "datetime",
+                "year": 2017,
+                "month": 2,
+                "day": 5,
+                "hour": 1,
+                "minute": 22,
+                "second": 18,
+                "microsecond": 0
+            },
+            "AssumeRolePolicyDocument": "%7B%22Version%22%3A%222012-10-17%22%2C%22Statement%22%3A%5B%7B%22Effect%22%3A%22Allow%22%2C%22Principal%22%3A%7B%22Service%22%3A%22lambda.amazonaws.com%22%7D%2C%22Action%22%3A%22sts%3AAssumeRole%22%7D%5D%7D"
+        },
+        "ResponseMetadata": {
+            "RequestId": "2ad33d8e-fc87-11e6-a59a-ebdf573605c2",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {
+                "x-amzn-requestid": "2ad33d8e-fc87-11e6-a59a-ebdf573605c2",
+                "content-type": "text/xml",
+                "content-length": "759",
+                "date": "Mon, 27 Feb 2017 00:53:34 GMT"
+            },
+            "RetryAttempts": 0
+        }
+    }
+}
