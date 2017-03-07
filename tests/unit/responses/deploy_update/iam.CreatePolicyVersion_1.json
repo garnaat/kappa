@@ -1,0 +1,21 @@
+{
+    "status_code": 403,
+    "data": {
+        "Error": {
+            "Type": "Sender",
+            "Code": "AccessDenied",
+            "Message": "User: arn:aws:iam::1234567890:user/Foo is not authorized to perform: iam:CreatePolicyVersion on resource: policy arn:aws:iam::1234567890:policy/kappa/kappa-simple_new-alias"
+        },
+        "ResponseMetadata": {
+            "RequestId": "3097d469-fc87-11e6-973d-55bc4e8fa5df",
+            "HTTPStatusCode": 403,
+            "HTTPHeaders": {
+                "x-amzn-requestid": "3097d469-fc87-11e6-973d-55bc4e8fa5df",
+                "content-type": "text/xml",
+                "content-length": "421",
+                "date": "Mon, 27 Feb 2017 00:53:44 GMT"
+            },
+            "RetryAttempts": 0
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "status_code": 201,
+    "data": {
+        "ResponseMetadata": {
+            "RequestId": "2b0f5bf9-fc87-11e6-999f-21eb225d97d3",
+            "HTTPStatusCode": 201,
+            "HTTPHeaders": {
+                "content-type": "application/json",
+                "date": "Mon, 27 Feb 2017 00:53:35 GMT",
+                "x-amzn-requestid": "2b0f5bf9-fc87-11e6-999f-21eb225d97d3",
+                "content-length": "488",
+                "connection": "keep-alive"
+            },
+            "RetryAttempts": 0
+        },
+        "FunctionName": "kappa-simple",
+        "FunctionArn": "arn:aws:lambda:us-east-1:123456789012:function:kappa-simple",
+        "Runtime": "python2.7",
+        "Role": "arn:aws:iam::123456789012:role/kappa/kappa-simple_dev",
+        "Handler": "simple.handler",
+        "CodeSize": 983,
+        "Description": "Foo the Bar",
+        "Timeout": 3,
+        "MemorySize": 256,
+        "LastModified": "2017-02-27T00:53:35.518+0000",
+        "CodeSha256": "xDpYBz0GtoyDB9ABWCTjH+e+oD+gQfe0fy5CEmqvbEc=",
+        "Version": "9"
+    }
+}

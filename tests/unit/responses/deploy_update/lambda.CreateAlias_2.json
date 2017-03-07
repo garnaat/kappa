@@ -1,0 +1,21 @@
+{
+    "status_code": 201,
+    "data": {
+        "ResponseMetadata": {
+            "RequestId": "31b2e1c7-fc87-11e6-a1eb-81b8fcdae6b1",
+            "HTTPStatusCode": 201,
+            "HTTPHeaders": {
+                "content-type": "application/json",
+                "date": "Mon, 27 Feb 2017 00:53:46 GMT",
+                "x-amzn-requestid": "31b2e1c7-fc87-11e6-a1eb-81b8fcdae6b1",
+                "content-length": "166",
+                "connection": "keep-alive"
+            },
+            "RetryAttempts": 0
+        },
+        "AliasArn": "arn:aws:lambda:us-east-1:123456789012:function:kappa-simple:new-alias",
+        "Name": "new-alias",
+        "FunctionVersion": "10",
+        "Description": "For the new-alias stage"
+    }
+}

@@ -2,13 +2,9 @@
 name: kappa-simple
 environments:
   dev:
-    profile: foobar
-    region: us-west-2
-    policy:
-      resources:
-        - arn: arn:aws:logs:*:*:*
-          actions:
-          - "*"
+    region: us-east-1
+  new-alias:
+    region: us-east-1
 lambda:
   description: Foo the Bar
   handler: simple.handler
