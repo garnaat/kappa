@@ -11,7 +11,7 @@ except ImportError:
 
 
 def open_file(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname))
+    return open(os.path.join(os.path.dirname(__file__), fname), "rb")
 
 
 def run_setup():
@@ -19,7 +19,7 @@ def run_setup():
         name='kappa',
         version=__version__,
         description='A CLI tool for AWS Lambda developers',
-        long_description=open_file('README.rst').read(),
+        long_description=open_file('README.rst').read().decode("utf-8"),
         url='https://github.com/garnaat/kappa',
         author='Mitch Garnaat',
         author_email='mitch@garnaat.com',
@@ -31,7 +31,7 @@ def run_setup():
             [console_scripts]
             kappa=kappa.scripts.cli:cli
         """,
-        install_requires=open_file('requirements.txt').readlines(),
+        install_requires=open_file('requirements.txt').read().decode("utf-8").split(),
         test_suite='tests',
         include_package_data=True,
         zip_safe=True,
