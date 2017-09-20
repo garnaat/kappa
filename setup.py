@@ -11,7 +11,7 @@ except ImportError:
 
 
 def open_file(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname))
+    return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8')
 
 
 def run_setup():
