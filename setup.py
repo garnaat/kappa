@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from kappa import __version__
+import codecs
 import os
 
 try:
@@ -11,7 +12,8 @@ except ImportError:
 
 
 def open_file(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname))
+    return codecs.open(os.path.join(os.path.dirname(__file__), fname),
+                       encoding='utf-8')
 
 
 def run_setup():
