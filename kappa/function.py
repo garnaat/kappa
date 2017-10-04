@@ -83,13 +83,14 @@ class Function(object):
 
     @property
     def vpc_config(self):
+        env_cfg = self._context.config['environments'][self._context.environment]
         vpc_config = {}
-        if 'vpc_config' in self._config:
-            if 'security_group_ids' in self._config['vpc_config']:
-                sgids = self._config['vpc_config']['security_group_ids']
+        if 'vpc_config' in env_cfg:
+            if 'security_group_ids' in env_cfg['vpc_config']:
+                sgids = env_cfg['vpc_config']['security_group_ids']
                 vpc_config['SecurityGroupIds'] = sgids
-            if 'subnet_ids' in self._config['vpc_config']:
-                snids = self._config['vpc_config']['subnet_ids']
+            if 'subnet_ids' in env_cfg['vpc_config']:
+                snids = env_cfg['vpc_config']['subnet_ids']
                 vpc_config['SubnetIds'] = snids
         return vpc_config
 

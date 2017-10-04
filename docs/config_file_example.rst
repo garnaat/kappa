@@ -36,6 +36,13 @@ Here is an example config file showing all possible sections.
            arn: arn:aws:kinesis:us-west-2:123456789012:stream/foo
            starting_position: LATEST
            batch_size: 100
+       vpc_config:
+         security_group_ids:
+           - sg-12345678
+           - sg-23456789
+         subnet_ids:
+           - subnet-12345678
+           - subnet-23456789
       env2:
         profile: profile2
         region: us-west-2
@@ -51,6 +58,13 @@ Here is an example config file showing all possible sections.
            arn: arn:aws:kinesis:us-west-2:234567890123:stream/foo
            starting_position: LATEST
            batch_size: 100
+       vpc_config:
+         security_group_ids:
+           - sg-34567890
+           - sg-34567891
+         subnet_ids:
+           - subnet-23456789
+           - subnet-34567890
     lambda:
       description: A simple Python sample
       handler: simple.handler
@@ -59,13 +73,6 @@ Here is an example config file showing all possible sections.
       timeout: 3
       log_retention_policy: 7
       excluded_dirs: default
-      vpc_config:
-        security_group_ids:
-          - sg-12345678
-          - sg-23456789
-        subnet_ids:
-          - subnet-12345678
-          - subnet-23456789
 
 
 Explanations:
