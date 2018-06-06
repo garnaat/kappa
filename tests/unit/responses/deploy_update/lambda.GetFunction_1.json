@@ -1,0 +1,22 @@
+{
+    "status_code": 404,
+    "data": {
+        "Error": {
+            "Message": "Function not found: arn:aws:lambda:us-east-1:123456789012:function:kappa-simple",
+            "Code": "ResourceNotFoundException"
+        },
+        "ResponseMetadata": {
+            "RequestId": "2afb36fc-fc87-11e6-bb80-a72fae70ea37",
+            "HTTPStatusCode": 404,
+            "HTTPHeaders": {
+                "content-type": "application/json",
+                "date": "Mon, 27 Feb 2017 00:53:35 GMT",
+                "x-amzn-errortype": "ResourceNotFoundException",
+                "x-amzn-requestid": "2afb36fc-fc87-11e6-bb80-a72fae70ea37",
+                "content-length": "107",
+                "connection": "keep-alive"
+            },
+            "RetryAttempts": 0
+        }
+    }
+}

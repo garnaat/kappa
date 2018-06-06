@@ -1,0 +1,22 @@
+{
+    "status_code": 404,
+    "data": {
+        "Error": {
+            "Message": "Alias not found: arn:aws:lambda:us-east-1:123456789012:function:kappa-simple:new-alias",
+            "Code": "ResourceNotFoundException"
+        },
+        "ResponseMetadata": {
+            "RequestId": "31a8f673-fc87-11e6-9419-57c1d3a964b1",
+            "HTTPStatusCode": 404,
+            "HTTPHeaders": {
+                "content-type": "application/json",
+                "date": "Mon, 27 Feb 2017 00:53:46 GMT",
+                "x-amzn-errortype": "ResourceNotFoundException",
+                "x-amzn-requestid": "31a8f673-fc87-11e6-9419-57c1d3a964b1",
+                "content-length": "114",
+                "connection": "keep-alive"
+            },
+            "RetryAttempts": 0
+        }
+    }
+}

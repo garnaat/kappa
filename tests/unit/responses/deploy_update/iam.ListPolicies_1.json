@@ -1,0 +1,48 @@
+{
+    "status_code": 200,
+    "data": {
+        "Policies": [
+            {
+                "PolicyName": "kappa-simple_new-alias",
+                "PolicyId": "ANPAJID6TMBOEVMCUACH4",
+                "Arn": "arn:aws:iam::123456789012:policy/kappa/kappa-simple_new-alias",
+                "Path": "/kappa/",
+                "DefaultVersionId": "v1",
+                "AttachmentCount": 1,
+                "IsAttachable": true,
+                "CreateDate": {
+                    "__class__": "datetime",
+                    "year": 2017,
+                    "month": 2,
+                    "day": 26,
+                    "hour": 18,
+                    "minute": 9,
+                    "second": 22,
+                    "microsecond": 0
+                },
+                "UpdateDate": {
+                    "__class__": "datetime",
+                    "year": 2017,
+                    "month": 2,
+                    "day": 26,
+                    "hour": 18,
+                    "minute": 9,
+                    "second": 22,
+                    "microsecond": 0
+                }
+            }
+        ],
+        "IsTruncated": false,
+        "ResponseMetadata": {
+            "RequestId": "2aa66063-fc87-11e6-ac7e-955189028374",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {
+                "x-amzn-requestid": "2aa66063-fc87-11e6-ac7e-955189028374",
+                "content-type": "text/xml",
+                "content-length": "810",
+                "date": "Mon, 27 Feb 2017 00:53:34 GMT"
+            },
+            "RetryAttempts": 0
+        }
+    }
+}
