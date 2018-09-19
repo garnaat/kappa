@@ -23,7 +23,7 @@ LOG = logging.getLogger(__name__)
 class SqsEventSource(kappa.event_source.base.EventSource):
 
     def __init__(self, context, config):
-        super(KinesisEventSource, self).__init__(context, config)
+        super(SqsEventSource, self).__init__(context, config)
         self._lambda = kappa.awsclient.create_client(
             'lambda', context.session)
 
@@ -45,7 +45,6 @@ class SqsEventSource(kappa.event_source.base.EventSource):
                 FunctionName=function.name,
                 EventSourceArn=self.arn,
                 BatchSize=self.batch_size,
-                StartingPosition=self.starting_position,
                 Enabled=self.enabled
             )
             LOG.debug(response)
