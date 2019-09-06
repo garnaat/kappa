@@ -48,7 +48,7 @@ class Context(object):
         else:
             self.set_logger('kappa', logging.INFO)
         self._load_cache()
-        self.config = yaml.load(config_file)
+        self.config = yaml.load(config_file, Loader=yaml.FullLoader)
         self.environment = environment
 
         if self.environment not in self.config.get('environments', {}):
@@ -89,7 +89,7 @@ class Context(object):
             cache_file = os.path.join('.kappa', 'cache')
             if os.path.isfile(cache_file):
                 with open(cache_file, 'r') as fp:
-                    self.cache = yaml.load(fp)
+                    self.cache = yaml.load(fp, Loader=yaml.FullLoader)
 
     def _delete_cache(self):
         if os.path.isdir('.kappa'):
