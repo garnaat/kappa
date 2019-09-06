@@ -1,2 +1,10 @@
-dev: {config_md5: 3ccd0a5630fa4e0d0effeb9de0b551a3, policy_md5: 12273b7917929c02cfc755f4700e1e2b,
-  zip_md5: b6605fd4990542106fa95b62ea62d70e}
+dev:
+  config_md5: !!binary |
+    ODU3NmMxYjMyYzA4NTExNDNjYmI4NGQwOTVkODc5NWQ=
+  zip_md5: !!binary |
+    OTRhOGM4M2U1Mjc4YmMxYjExNmZkMGI5NmVmZjQ4Mjg=
+new-alias:
+  config_md5: !!binary |
+    NmEyNDk3NjZjYjI5MGIwZTRjZjVhMzc3NWU2MzQ4ZGU=
+  zip_md5: !!binary |
+    OTRhOGM4M2U1Mjc4YmMxYjExNmZkMGI5NmVmZjQ4Mjg=
