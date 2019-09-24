@@ -483,6 +483,7 @@ class Function(object):
                 response = self._lambda_client.call(
                     'update_function_configuration',
                     FunctionName=self.name,
+                    Runtime=self.runtime,
                     VpcConfig=self.vpc_config,
                     Role=exec_role,
                     Handler=self.handler,
