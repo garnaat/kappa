@@ -56,14 +56,14 @@ class S3EventSource(kappa.event_source.base.EventSource):
         existingPermission={}
         try:
             response = self._lambda.call('get_policy',
-                                     FunctionName=function.name)
+                                     FunctionName=function.arn)
             existingPermission = self.arn in str(response['Policy'])
         except Exception:
             LOG.debug('S3 event source permission not available')
 
         if not existingPermission:
             response = self._lambda.call('add_permission',
-                                         FunctionName=function.name,
+                                         FunctionName=function.arn,
                                          StatementId=str(uuid.uuid4()),
                                          Action='lambda:InvokeFunction',
                                          Principal='s3.amazonaws.com',
