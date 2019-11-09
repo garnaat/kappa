@@ -28,7 +28,10 @@ class S3EventSource(kappa.event_source.base.EventSource):
         self._lambda = kappa.awsclient.create_client('lambda', context.session)
 
     def _make_notification_id(self, function_name):
-        return 'Kappa-%s-notification' % function_name
+        id_no = self._config.get('id')
+        if not id_no:
+            return 'Kappa-%s-notification' % function_name
+        return 'Kappa-%s-notification-%s' % (function_name,id_no)
 
     def _get_bucket_name(self):
         return self.arn.split(':')[-1]

@@ -40,15 +40,31 @@ class KinesisEventSource(kappa.event_source.base.EventSource):
 
     def add(self, function):
         try:
-            response = self._lambda.call(
-                'create_event_source_mapping',
-                FunctionName=function.name,
-                EventSourceArn=self.arn,
-                BatchSize=self.batch_size,
-                StartingPosition=self.starting_position,
-                Enabled=self.enabled
-            )
-            LOG.debug(response)
+            existingMapping={}
+            try:
+                response = self._lambda.call(
+                    'list_event_source_mappings',
+                    FunctionName=function.name,
+                    EventSourceArn=self.arn
+                )
+                LOG.debug(response)
+                existingMapping = self.arn in response['EventSourceMappings'][0]['EventSourceArn']
+            except Exception:
+                LOG.debug('Kinesis event source mapping not available')
+
+            if not existingMapping:
+                response = self._lambda.call(
+                    'create_event_source_mapping',
+                    FunctionName=function.name,
+                    EventSourceArn=self.arn,
+                    BatchSize=self.batch_size,
+                    StartingPosition=self.starting_position,
+                    Enabled=self.enabled
+                )
+                LOG.debug(response)
+            else:
+                self.update(function)
+
         except Exception:
             LOG.exception('Unable to add event source')
 
@@ -83,9 +99,10 @@ class KinesisEventSource(kappa.event_source.base.EventSource):
             try:
                 response = self._lambda.call(
                     'update_event_source_mapping',
+                    FunctionName=function.name,
                     BatchSize=self.batch_size,
                     Enabled=self.enabled,
-                    FunctionName=function.arn)
+                    UUID=uuid)
                 LOG.debug(response)
             except Exception:
                 LOG.exception('Unable to update event source')
