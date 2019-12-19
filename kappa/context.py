@@ -217,6 +217,7 @@ class Context(object):
                 'arn': event_source.arn,
                 'starting_position': event_source.starting_position,
                 'batch_size': event_source.batch_size,
+                'batch_window': event_source.batch_window,
                 'enabled': event_source.enabled
             })
         return event_sources

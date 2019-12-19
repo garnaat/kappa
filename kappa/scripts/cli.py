@@ -153,6 +153,7 @@ def event_sources(ctx, command):
             click.echo('arn: {}'.format(es['arn']))
             click.echo('starting position: {}'.format(es['starting_position']))
             click.echo('batch size: {}'.format(es['batch_size']))
+            click.echo('batch window: {}'.format(es['batch_window']))
             click.echo('enabled: {}'.format(es['enabled']))
         click.echo('done')
     elif command == 'enable':
