@@ -45,6 +45,7 @@ class KinesisEventSource(kappa.event_source.base.EventSource):
                 FunctionName=function.name,
                 EventSourceArn=self.arn,
                 BatchSize=self.batch_size,
+                MaximumBatchingWindowInSeconds=self.batch_window,
                 StartingPosition=self.starting_position,
                 Enabled=self.enabled
             )
@@ -84,6 +85,7 @@ class KinesisEventSource(kappa.event_source.base.EventSource):
                 response = self._lambda.call(
                     'update_event_source_mapping',
                     BatchSize=self.batch_size,
+                    MaximumBatchingWindowInSeconds=self.batch_window,
                     Enabled=self.enabled,
                     FunctionName=function.arn)
                 LOG.debug(response)

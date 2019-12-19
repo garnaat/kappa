@@ -33,5 +33,9 @@ class EventSource(object):
         return self._config.get('batch_size', 100)
 
     @property
+    def batch_window(self):
+        return self._config.get('batch_window', 0)
+
+    @property
     def enabled(self):
         return self._config.get('enabled', False)
