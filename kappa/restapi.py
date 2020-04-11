@@ -125,7 +125,7 @@ class RestApi(object):
             LOG.debug('build_path=%s', build_path)
             full_path = '/'.join(build_path)
             LOG.debug('full_path=%s', full_path)
-            if full_path is '':
+            if full_path == '':
                 parent = resources['/']
             else:
                 if full_path not in resources and parent:
