@@ -128,16 +128,21 @@ class S3EventSource(kappa.event_source.base.EventSource):
         LOG.debug(response)
 
         if 'LambdaFunctionConfigurations' in response:
-            notification_spec_list = response['LambdaFunctionConfigurations']
+            new_notifications = []
+            current_notifications = response['LambdaFunctionConfigurations']
 
-            if notification_spec in notification_spec_list:
-                notification_spec_list.remove(notification_spec)
-                response['LambdaFunctionConfigurations'] = notification_spec_list
+            for current_notification_spec in current_notifications:
+                if notification_spec['Id'] != current_notification_spec['Id']:
+                    new_notifications.append(current_notification_spec)
+
+            if len(new_notifications) != len(current_notifications):
+                response['LambdaFunctionConfigurations'] = new_notifications
                 del response['ResponseMetadata']
                 response = self._s3.call(
                     'put_bucket_notification_configuration',
                     Bucket=self._get_bucket_name(),
-                    NotificationConfiguration=response)
+                    NotificationConfiguration=response
+                )
                 LOG.debug(response)
 
     disable = remove
