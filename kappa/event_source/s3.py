@@ -15,7 +15,8 @@
 
 import kappa.event_source.base
 import logging
-import uuid
+import random
+import string
 
 LOG = logging.getLogger(__name__)
 
@@ -28,7 +29,10 @@ class S3EventSource(kappa.event_source.base.EventSource):
         self._lambda = kappa.awsclient.create_client('lambda', context.session)
 
     def _make_notification_id(self, function_name):
-        return 'Kappa-%s-notification' % function_name
+        id_no = self._config.get('id')
+        if not id_no:
+            return 'Kappa-%s-notification' % function_name
+        return 'Kappa-%s-notification-%s' % (function_name,id_no)
 
     def _get_bucket_name(self):
         return self.arn.split(':')[-1]
@@ -56,15 +60,17 @@ class S3EventSource(kappa.event_source.base.EventSource):
         existingPermission={}
         try:
             response = self._lambda.call('get_policy',
-                                     FunctionName=function.name)
+                                     FunctionName=function.arn)
             existingPermission = self.arn in str(response['Policy'])
         except Exception:
             LOG.debug('S3 event source permission not available')
 
         if not existingPermission:
             response = self._lambda.call('add_permission',
-                                         FunctionName=function.name,
-                                         StatementId=str(uuid.uuid4()),
+                                         FunctionName=function.arn,
+                                         StatementId=''.join(
+                                            random.choice(string.ascii_uppercase + string.digits) for _ in range(8)
+                                        ),
                                          Action='lambda:InvokeFunction',
                                          Principal='s3.amazonaws.com',
                                          SourceArn=self.arn)
@@ -86,7 +92,7 @@ class S3EventSource(kappa.event_source.base.EventSource):
 
         if new_notification_spec not in notification_spec_list:
             notification_spec_list.append(new_notification_spec)
-        else:       
+        else:
             notification_spec_list=[]
             LOG.debug("S3 event source already exists")
 
@@ -122,16 +128,21 @@ class S3EventSource(kappa.event_source.base.EventSource):
         LOG.debug(response)
 
         if 'LambdaFunctionConfigurations' in response:
-            notification_spec_list = response['LambdaFunctionConfigurations']
+            new_notifications = []
+            current_notifications = response['LambdaFunctionConfigurations']
 
-            if notification_spec in notification_spec_list:
-                notification_spec_list.remove(notification_spec)
-                response['LambdaFunctionConfigurations'] = notification_spec_list
+            for current_notification_spec in current_notifications:
+                if notification_spec['Id'] != current_notification_spec['Id']:
+                    new_notifications.append(current_notification_spec)
+
+            if len(new_notifications) != len(current_notifications):
+                response['LambdaFunctionConfigurations'] = new_notifications
                 del response['ResponseMetadata']
                 response = self._s3.call(
                     'put_bucket_notification_configuration',
                     Bucket=self._get_bucket_name(),
-                    NotificationConfiguration=response)
+                    NotificationConfiguration=response
+                )
                 LOG.debug(response)
 
     disable = remove
@@ -146,14 +157,13 @@ class S3EventSource(kappa.event_source.base.EventSource):
             Bucket=self._get_bucket_name())
         LOG.debug(response)
 
-
         if 'LambdaFunctionConfigurations' not in response:
             return None
-        
+
         notification_spec_list = response['LambdaFunctionConfigurations']
         if notification_spec not in notification_spec_list:
             return None
-        
+
         return {
             'EventSourceArn': self.arn,
             'State': 'Enabled'
